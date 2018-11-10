@@ -64,7 +64,7 @@ func connectToDatabase(dns string) {
 		panic(fmt.Sprintf("[Error] %s", err))
 	}
 
-	db.LogMode(!isProduction())
+	db.LogMode(!IsProduction())
 
 	// SetMaxIdleConns() should be greater than SetMaxOpenConns().
 	db.DB().SetMaxIdleConns(30)

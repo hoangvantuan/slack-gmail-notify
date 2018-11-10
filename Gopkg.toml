@@ -44,3 +44,7 @@
 [[constraint]]
   name = "github.com/caarlos0/env"
   version = "3.5.0"
+
+[[constraint]]
+  name = "go.uber.org/zap"
+  version = "1.9.1"

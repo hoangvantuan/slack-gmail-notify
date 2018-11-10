@@ -47,6 +47,6 @@ func getEnvironment() environment {
 	return env
 }
 
-func isProduction() bool {
+func IsProduction() bool {
 	return getEnvironment() == prod
 }
