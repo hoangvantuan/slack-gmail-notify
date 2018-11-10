@@ -5,7 +5,7 @@ import (
 
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
-	"github.com/mediadotech/distribution-backend/infra"
+	"github.com/mdshun/slack-gmail-notify/infra"
 )
 
 func main() {
