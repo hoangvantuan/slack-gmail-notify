@@ -6,6 +6,7 @@ go:
   - 1.12.x
 
 before_install:
+  - go get github.com/tools/godep
   - dep ensure
 
 # Only clone the most recent commit.
