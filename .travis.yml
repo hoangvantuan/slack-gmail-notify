@@ -9,9 +9,6 @@ go:
 git:
   depth: 1
 
-install:
-  - go get -u github.com/golang/lint/golint
-
 # Don't email me the results of the test runs.
 notifications:
   email: false
