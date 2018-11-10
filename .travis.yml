@@ -1,32 +1,19 @@
 language: go
-sudo: false
-dist: trusty
-env: HUGO_BUILD_TAGS="extended"
-git:
-  depth: false
 go:
   - 1.12
   - tip
-os:
-  - linux
-  - osx
+before_install:
+  - go get github.com/golang/dep/...
+  - go get github.com/mattn/goveralls
+  - go get golang.org/x/tools/cmd/cover
+install:
+  - $GOPATH/bin/dep ensure
+script:
+  - go test
+  - "$HOME/gopath/bin/goveralls -service=travis-ci"
 matrix:
   allow_failures:
     - go: tip
-  fast_finish: true
-install:
-  - mkdir -p $HOME/src
-  - mv $HOME/gopath/src/github.com/gohugoio/hugo $HOME/src
-  - export TRAVIS_BUILD_DIR=$HOME/src/hugo
-  - cd $HOME/src/hugo
-  - go get github.com/magefile/mage
-script:
-  - go mod download
-  - mage -v test
-  - mage -v check
-  - mage -v hugo
-  - ./hugo -s docs/
-  - ./hugo --renderToMemory -s docs/
-before_install:
-  - gem install asciidoctor
-  - type asciidoctor
+branches:
+  only:
+    - master
