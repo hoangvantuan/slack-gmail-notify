@@ -27,13 +27,13 @@ type dbConfig struct {
 var dbConfigs = map[environment]dbConfig{
 	dev: dbConfig{
 		Endpoint: "ec2-52-193-31-72.ap-northeast-1.compute.amazonaws.com:3306",
-		Database: "slgmails",
+		Database: "slgmails_dev",
 	},
 	stg: dbConfig{
-		Database: "slgmails",
+		Database: "slgmails_stg",
 	},
 	prod: dbConfig{
-		Database: "slgmails",
+		Database: "slgmails_prod",
 	},
 }
 
