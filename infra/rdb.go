@@ -2,7 +2,6 @@ package infra
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -39,19 +38,19 @@ func setupDatabase() {
 	// Determine base config per env.
 	dbc := dbConfigs[getEnvironment()]
 
-	log.Println("[Info] Get RDS username & password from env...")
+	Logger.Info("Get RDS username & password from env...")
 	dbc.Username = Env.MysqlUser
 	dbc.Password = Env.MysqlPass
 
-	log.Println("[Info] Get MYSQL endpoint...")
+	Logger.Info("Get MYSQL endpoint...")
 
 	dbc.Endpoint = Env.MysqlEndpoint
 
 	if dbc.Endpoint == "" {
-		panic("[Error] db endpoint not found on environment variable and config")
+		Logger.Panic("db endpoint not found on environment variable and config")
 	}
 
-	log.Println("[Info] Connect database...")
+	Logger.Info("Connect database...")
 	connectToDatabase(
 		fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True&loc=Local",
 			dbc.Username, dbc.Password, dbc.Endpoint, dbc.Database),
@@ -61,7 +60,7 @@ func setupDatabase() {
 func connectToDatabase(dns string) {
 	db, err := gorm.Open("mysql", dns)
 	if err != nil {
-		panic(fmt.Sprintf("[Error] %s", err))
+		Logger.Panic(fmt.Sprintf("%s", err))
 	}
 
 	db.LogMode(!IsProduction())

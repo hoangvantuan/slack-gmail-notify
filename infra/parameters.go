@@ -2,7 +2,6 @@ package infra
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -32,7 +31,7 @@ func loadEnv() {
 	err := godotenv.Load(rootPath)
 
 	if err != nil {
-		log.Printf("[Warn] loading .env.%s file\n%s", getEnvironment(), err)
+		Sugar.Warn("loading .env.%s file\n%s", getEnvironment(), err)
 	}
 }
 
@@ -42,6 +41,6 @@ func parseEnv() {
 	err := env.Parse(Env)
 
 	if err != nil {
-		log.Printf("[Warn] parse envs to struct\n%s", err)
+		Sugar.Warn("[Warn] parse envs to struct\n%s", err)
 	}
 }

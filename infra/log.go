@@ -1,8 +1,6 @@
-package log
+package infra
 
 import (
-	"github.com/mdshun/slack-gmail-notify/infra"
-
 	"go.uber.org/zap"
 )
 
@@ -14,8 +12,8 @@ var Logger *zap.Logger
 // Sugar is sugar logger
 var Sugar *zap.SugaredLogger
 
-func init() {
-	if infra.IsProduction() {
+func setupLogger() {
+	if IsProduction() {
 		Logger, _ = zap.NewProduction()
 	} else {
 		Logger, _ = zap.NewDevelopment()

@@ -1,7 +1,6 @@
 package infra
 
 import (
-	"log"
 	"os"
 )
 
@@ -29,11 +28,13 @@ func (e environment) String() string {
 // Setup prepares database connection and parameters for running application.
 func Setup() {
 	if RDB != nil {
-		log.Printf("[Info] Infra already setup!")
+		Logger.Info("Infra already setup!")
 		return
 	}
 
-	log.Printf("[Info] Environment is '%s'.\n", getEnvironment())
+	setupLogger()
+
+	Sugar.Info("Environment is ", getEnvironment())
 
 	setupEnv()
 	setupDatabase()
