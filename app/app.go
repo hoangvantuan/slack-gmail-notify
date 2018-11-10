@@ -12,6 +12,8 @@ import (
 func Run() {
 	e := echo.New()
 
+	e.Debug = !infra.IsProduction()
+
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
