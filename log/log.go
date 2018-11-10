@@ -6,38 +6,20 @@ import (
 	"go.uber.org/zap"
 )
 
-var logger *zap.Logger
+// TODO: config log to file
+
+// Logger is logger
+var Logger *zap.Logger
+
+// Sugar is sugar logger
+var Sugar *zap.SugaredLogger
 
 func init() {
 	if infra.IsProduction() {
-		logger, _ = zap.NewProduction()
+		Logger, _ = zap.NewProduction()
 	} else {
-
-		logger, _ = zap.NewDevelopment()
+		Logger, _ = zap.NewDevelopment()
 	}
-}
 
-// Info is level info
-func Info(msg string, fields ...zap.Field) {
-	logger.Info(msg, fields...)
-}
-
-// Debug is level debug
-func Debug(msg string, fields ...zap.Field) {
-	logger.Debug(msg, fields...)
-}
-
-// Warn is level warn
-func Warn(msg string, fields ...zap.Field) {
-	logger.Warn(msg, fields...)
-}
-
-// Error is level error
-func Error(msg string, fields ...zap.Field) {
-	logger.Error(msg, fields...)
-}
-
-// Fatal is level fatal
-func Fatal(msg string, fields ...zap.Field) {
-	logger.Fatal(msg, fields...)
+	Sugar = Logger.Sugar()
 }

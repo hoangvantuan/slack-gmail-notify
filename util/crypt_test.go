@@ -15,11 +15,11 @@ func TestEncrypt(t *testing.T) {
 	result, err := Encrypt(data["value"], key)
 
 	if err != nil {
-		t.Fatalf("[Error] %s", err)
+		t.Fatalf("[Warn] %s", err)
 	}
 
 	if data["expect"] != string(result) {
-		t.Errorf("[Error] expect %s receive %s", data["expect"], result)
+		t.Errorf("[Warn] expect %s receive %s", data["expect"], result)
 	} else {
 		t.Log(result)
 	}
@@ -34,11 +34,11 @@ func TestDecrypt(t *testing.T) {
 	result, err := Decrypt(data["value"], key)
 
 	if err != nil {
-		t.Errorf("[Error] %s", err)
+		t.Errorf("[Warn] %s", err)
 	}
 
 	if data["expect"] != string(result) {
-		t.Errorf("[Error] expect %s receive %s", data["expect"], string(result))
+		t.Errorf("[Warn] expect %s receive %s", data["expect"], string(result))
 	} else {
 		t.Log(string(result))
 	}
