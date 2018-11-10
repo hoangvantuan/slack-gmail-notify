@@ -1,30 +1,32 @@
 language: go
-
-# You don't need to test on very old version of the Go compiler. It's the user's
-# responsibility to keep their compilers up to date.
-go:
-  - 1.12.x
-
-before_install:
-  - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-  - dep ensure
-
-# Only clone the most recent commit.
+sudo: false
+dist: trusty
+env: HUGO_BUILD_TAGS="extended"
 git:
-  depth: 1
-
-# Don't email me the results of the test runs.
-notifications:
-  email: false
-
-# Anything in before_script that returns a nonzero exit code will flunk the
-# build and immediately stop. It's sorta like having set -e enabled in bash.
-# Make sure golangci-lint is vendored.
-before_script:
-  - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $GOPATH/bin v1.12
-# script always runs to completion (set +e). If we have linter issues AND a
-# failing test, we want to see both. Configure golangci-lint with a
-# .golangci.yml file at the top level of your repo.
+  depth: false
+go:
+  - 1.12
+  - tip
+os:
+  - linux
+  - osx
+matrix:
+  allow_failures:
+    - go: tip
+  fast_finish: true
+install:
+  - mkdir -p $HOME/src
+  - mv $HOME/gopath/src/github.com/gohugoio/hugo $HOME/src
+  - export TRAVIS_BUILD_DIR=$HOME/src/hugo
+  - cd $HOME/src/hugo
+  - go get github.com/magefile/mage
 script:
-  - golangci-lint run # run a bunch of code checkers/linters in parallel
-  - go test -v -race ./... # Run all the tests with the race detector enabled
+  - go mod download
+  - mage -v test
+  - mage -v check
+  - mage -v hugo
+  - ./hugo -s docs/
+  - ./hugo --renderToMemory -s docs/
+before_install:
+  - gem install asciidoctor
+  - type asciidoctor
