@@ -1,6 +1,10 @@
+# connect host
 server_addr: 52.193.31.72:5223
 tunnels:
   webui:
+    # protocol
     proto: http
-    addr: localhost:8080
+    # refirect to localhost
+    addr: localhost:8080/
+    # request from gmailtoslack.tk
     host: gmailtoslack.tk
