@@ -28,7 +28,12 @@ func (e environment) String() string {
 
 // Setup prepares database connection and parameters for running application.
 func Setup() {
-	log.Printf("Environment is '%s'.\n", getEnvironment())
+	if RDB != nil {
+		log.Printf("[Info] Infra already setup!")
+		return
+	}
+
+	log.Printf("[Info] Environment is '%s'.\n", getEnvironment())
 
 	setupEnv()
 	setupDatabase()
@@ -47,6 +52,7 @@ func getEnvironment() environment {
 	return env
 }
 
+// IsProduction is true if current env is prod
 func IsProduction() bool {
 	return getEnvironment() == prod
 }

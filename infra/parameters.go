@@ -3,6 +3,8 @@ package infra
 import (
 	"fmt"
 	"log"
+	"os"
+	"path/filepath"
 
 	"github.com/caarlos0/env"
 	"github.com/joho/godotenv"
@@ -25,10 +27,12 @@ func setupEnv() {
 }
 
 func loadEnv() {
-	err := godotenv.Load(fmt.Sprintf(".env.%s", getEnvironment()))
+	envFileName := fmt.Sprintf(".env.%s", getEnvironment())
+	rootPath := filepath.Join(os.Getenv("GOPATH"), "src/github.com/mdshun/slack-gmail-notify", envFileName)
+	err := godotenv.Load(rootPath)
 
 	if err != nil {
-		log.Fatalf("Error loading .env.%s file\n%s", getEnvironment(), err)
+		log.Printf("[Warn] loading .env.%s file\n%s", getEnvironment(), err)
 	}
 }
 
@@ -38,6 +42,6 @@ func parseEnv() {
 	err := env.Parse(Env)
 
 	if err != nil {
-		log.Fatalf("Error parse envs to struct\n%s", err)
+		log.Printf("[Warn] parse envs to struct\n%s", err)
 	}
 }
