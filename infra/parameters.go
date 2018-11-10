@@ -31,7 +31,7 @@ func loadEnv() {
 	err := godotenv.Load(rootPath)
 
 	if err != nil {
-		Sugar.Warn("loading .env.%s file\n%s", getEnvironment(), err)
+		Swarn("loading .env.%s file\n%s", getEnvironment(), err)
 	}
 }
 
@@ -41,6 +41,6 @@ func parseEnv() {
 	err := env.Parse(Env)
 
 	if err != nil {
-		Sugar.Warn("[Warn] parse envs to struct\n%s", err)
+		Swarn("[Warn] parse envs to struct\n%s", err)
 	}
 }

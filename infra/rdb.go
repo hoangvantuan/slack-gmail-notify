@@ -38,19 +38,19 @@ func setupDatabase() {
 	// Determine base config per env.
 	dbc := dbConfigs[getEnvironment()]
 
-	Logger.Info("Get RDS username & password from env...")
+	Linfo("Get RDS username & password from env...")
 	dbc.Username = Env.MysqlUser
 	dbc.Password = Env.MysqlPass
 
-	Logger.Info("Get MYSQL endpoint...")
+	Linfo("Get MYSQL endpoint...")
 
 	dbc.Endpoint = Env.MysqlEndpoint
 
 	if dbc.Endpoint == "" {
-		Logger.Panic("db endpoint not found on environment variable and config")
+		Lpanic("db endpoint not found on environment variable and config")
 	}
 
-	Logger.Info("Connect database...")
+	Linfo("Connect database...")
 	connectToDatabase(
 		fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True&loc=Local",
 			dbc.Username, dbc.Password, dbc.Endpoint, dbc.Database),
@@ -60,7 +60,7 @@ func setupDatabase() {
 func connectToDatabase(dns string) {
 	db, err := gorm.Open("mysql", dns)
 	if err != nil {
-		Logger.Panic(fmt.Sprintf("%s", err))
+		Lpanic(fmt.Sprintf("%s", err))
 	}
 
 	db.LogMode(!IsProduction())

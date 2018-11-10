@@ -28,13 +28,13 @@ func (e environment) String() string {
 // Setup prepares database connection and parameters for running application.
 func Setup() {
 	if RDB != nil {
-		Logger.Info("Infra already setup!")
+		Linfo("Infra already setup!")
 		return
 	}
 
 	setupLogger()
 
-	Sugar.Info("Environment is ", getEnvironment())
+	Sinfo("Environment is ", getEnvironment())
 
 	setupEnv()
 	setupDatabase()
