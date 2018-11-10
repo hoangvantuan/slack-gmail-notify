@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo"
@@ -28,5 +29,5 @@ func Run() {
 	})
 
 	infra.Setup()
-	e.Logger.Fatal(e.Start(":80"))
+	e.Logger.Fatal(e.Start(fmt.Sprintf(":%s", infra.Env.Port)))
 }
