@@ -3,7 +3,6 @@ package infra
 import (
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -26,7 +25,6 @@ type dbConfig struct {
 
 var dbConfigs = map[environment]dbConfig{
 	dev: dbConfig{
-		Endpoint: "ec2-52-193-31-72.ap-northeast-1.compute.amazonaws.com:3306",
 		Database: "slgmails_dev",
 	},
 	stg: dbConfig{
@@ -42,14 +40,13 @@ func setupDatabase() {
 	dbc := dbConfigs[getEnvironment()]
 
 	log.Println("Get RDS username & password from env...")
-	dbc.Username = os.Getenv("slgmails-master-username")
-	dbc.Password = os.Getenv("slgmails-master-password")
+	dbc.Username = Env.MysqlUser
+	dbc.Password = Env.MysqlPass
 
 	log.Println("Get MYSQL endpoint...")
-	endpoint := os.Getenv("SLGMAILS_MYSQL_ENDPOINT")
-	if endpoint != "" {
-		dbc.Endpoint = endpoint
-	}
+
+	dbc.Endpoint = Env.MysqlEndpoint
+
 	if dbc.Endpoint == "" {
 		panic("[Error] db endpoint not found on environment variable and config")
 	}

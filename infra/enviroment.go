@@ -30,7 +30,7 @@ func (e environment) String() string {
 func Setup() {
 	log.Printf("Environment is '%s'.\n", getEnvironment())
 
-	setupEncryptKey()
+	setupEnv()
 	setupDatabase()
 }
 
