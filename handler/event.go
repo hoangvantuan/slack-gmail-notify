@@ -28,7 +28,7 @@ type eventHandler struct{}
 func BindEventHandler(e *echo.Echo) {
 	h := &eventHandler{}
 
-	e.POST("/v1/event", h.handler)
+	e.POST("/v1/slack/event", h.handler)
 }
 
 // TODO: need verification request
@@ -41,7 +41,13 @@ func (e *eventHandler) handler(ctx echo.Context) error {
 		ctx.Request().Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
 	}
 
-	eventAPI, err := slackevents.ParseEvent(json.RawMessage(bodyBytes), slackevents.OptionVerifyToken(&slackevents.TokenComparator{VerificationToken: infra.Env.SlackVerificationToken}))
+	// disable verifytoken
+	// TODO: use function of library
+	optionNoVerifyToken := func(cfg *slackevents.Config) {
+		cfg.TokenVerified = true
+	}
+
+	eventAPI, err := slackevents.ParseEvent(json.RawMessage(bodyBytes), optionNoVerifyToken)
 	if err != nil {
 		infra.Swarn("has error while parse event request ", err)
 		return errors.Wrap(err, "has error while parse event requests")

@@ -21,6 +21,9 @@ func Run() {
 
 	e.Debug = !infra.IsProduction()
 
+	// Add verify slack request
+	e.Use(SlackReqAuthMiddleware())
+
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{

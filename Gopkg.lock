@@ -234,7 +234,6 @@
   analyzer-version = 1
   input-imports = [
     "github.com/caarlos0/env",
-    "github.com/go-playground/universal-translator",
     "github.com/jinzhu/gorm",
     "github.com/jinzhu/gorm/dialects/mysql",
     "github.com/joho/godotenv",
