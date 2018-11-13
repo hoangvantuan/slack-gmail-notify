@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -9,11 +8,11 @@ import (
 
 // Team is teams table
 type Team struct {
-	TeamID         string         `gorm:"primary_key"`
-	TeanName       sql.NullString `gorm:"not null"`
-	Scope          sql.NullString `gorm:"not null"`
-	AccessToken    sql.NullString `gorm:"not null"`
-	RefreshToken   sql.NullString `gorm:"not null"`
+	TeamID         string `gorm:"primary_key"`
+	TeamName       string `gorm:"not null"`
+	UserID         string `gorm:"not null"`
+	Scope          string `gorm:"not null"`
+	AccessToken    string `gorm:"not null"`
 	BotUserID      string
 	BotAccessToken string
 	CreatedAt      time.Time

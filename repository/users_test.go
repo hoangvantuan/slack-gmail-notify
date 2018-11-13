@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"database/sql"
 	"testing"
 
 	"github.com/mdshun/slack-gmail-notify/infra"
@@ -13,8 +12,8 @@ func init() {
 
 func TestAdd(t *testing.T) {
 	user := &User{
-		UserID:   sql.NullString{String: "12345", Valid: true},
-		TeamID:   sql.NullString{String: "122345", Valid: true},
+		UserID:   "12345",
+		TeamID:   "122345",
 		UserName: "TestUser",
 	}
 
@@ -31,8 +30,8 @@ func TestAdd(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 	user := &User{
-		UserID:   sql.NullString{String: "12345", Valid: true},
-		TeamID:   sql.NullString{String: "122345", Valid: true},
+		UserID:   "12345",
+		TeamID:   "122345",
 		UserName: "TestUser",
 	}
 
@@ -54,8 +53,8 @@ func TestDelete(t *testing.T) {
 
 func TestFindByID(t *testing.T) {
 	user := &User{
-		UserID:   sql.NullString{String: "12345", Valid: true},
-		TeamID:   sql.NullString{String: "122345", Valid: true},
+		UserID:   "12345",
+		TeamID:   "122345",
 		UserName: "TestUser",
 	}
 

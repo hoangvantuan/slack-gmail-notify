@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/mdshun/slack-gmail-notify/handler"
+	"github.com/mediadotech/distribution-backend/cmd/public-api/validator"
+
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/mdshun/slack-gmail-notify/infra"
@@ -12,6 +15,9 @@ import (
 // Run is start app
 func Run() {
 	e := echo.New()
+
+	// add validator
+	e.Validator = validator.NewDefaultValidator()
 
 	e.Debug = !infra.IsProduction()
 
@@ -22,6 +28,9 @@ func Run() {
 		AllowMethods: []string{echo.GET, echo.HEAD, echo.PUT, echo.PATCH, echo.POST, echo.DELETE, echo.OPTIONS},
 		AllowHeaders: []string{"*"},
 	}))
+
+	handler.BindAuthHandler(e)
+	handler.BindEventHandler(e)
 
 	// Set API root.
 	e.GET("/", func(c echo.Context) error {

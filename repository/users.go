@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -9,9 +8,9 @@ import (
 
 // User is users table
 type User struct {
-	ID        uint           `gorm:"primary_key"`
-	UserID    sql.NullString `gorm:"not null"`
-	TeamID    sql.NullString `gorm:"not null"`
+	ID        uint   `gorm:"primary_key"`
+	UserID    string `gorm:"not null"`
+	TeamID    string `gorm:"not null"`
 	UserName  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
