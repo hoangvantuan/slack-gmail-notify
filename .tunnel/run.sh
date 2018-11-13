@@ -1,2 +1,2 @@
 #!/bin/bash
-tunnel -config $GOPATH/src/github.com/mdshun/slack-gmail-notify/.tunnel/tunnel.yml start-all > /dev/null 2>&1 &
+tunnel -config $GOPATH/src/github.com/mdshun/slack-gmail-notify/.tunnel/tunnel.yml start-all
