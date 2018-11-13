@@ -1,19 +1,18 @@
 package usecase
 
-// AuthRequestInput is auth request param
-type EventRequestInput struct {
-	Code  string
-	State string
-}
-
 type eventUsecaseImpl struct{}
 
-// AuthUsecase is auth interface
+// EventUsecase is event interface
 type EventUsecase interface {
-	SlackAuth(ri *AuthRequestInput) error
+	UninstallApp(teamID string) error
 }
 
-// NewAuthUsecase will return auth usecase
+// NewEventUsecase will return event usecase
 func NewEventUsecase() AuthUsecase {
 	return &authUsecaseImpl{}
+}
+
+// UninstallApp will remove all data of team
+func (e *eventUsecaseImpl) UninstallApp(teamID string) error {
+	return nil
 }
