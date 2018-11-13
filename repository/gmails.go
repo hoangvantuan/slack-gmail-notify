@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -9,14 +8,14 @@ import (
 
 // Gmail is gmails table
 type Gmail struct {
-	ID              uint           `gorm:"primary_key"`
-	UserID          sql.NullString `gorm:"not null"`
-	Email           sql.NullString `gorm:"unique_index;not null"`
-	AccessToken     sql.NullString `gorm:"not null"`
-	RefreshToken    sql.NullString `gorm:"not null"`
-	TokenType       sql.NullString `gorm:"not null"`
-	Scope           sql.NullString `gorm:"not null"`
-	ExpiryDate      sql.NullString `gorm:"not null"`
+	ID              uint   `gorm:"primary_key"`
+	UserID          string `gorm:"not null"`
+	Email           string `gorm:"unique_index;not null"`
+	AccessToken     string `gorm:"not null"`
+	RefreshToken    string `gorm:"not null"`
+	TokenType       string `gorm:"not null"`
+	Scope           string `gorm:"not null"`
+	ExpiryDate      string `gorm:"not null"`
 	NotifyChannelID string
 	CreatedAt       time.Time
 	UpdatedAt       time.Time

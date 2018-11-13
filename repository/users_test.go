@@ -12,9 +12,8 @@ func init() {
 
 func TestAdd(t *testing.T) {
 	user := &User{
-		UserID:   "12345",
-		TeamID:   "122345",
-		UserName: "TestUser",
+		UserID: "12345",
+		TeamID: "122345",
 	}
 
 	repo := NewUserRepository(infra.RDB)
@@ -30,9 +29,8 @@ func TestAdd(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 	user := &User{
-		UserID:   "12345",
-		TeamID:   "122345",
-		UserName: "TestUser",
+		UserID: "12345",
+		TeamID: "122345",
 	}
 
 	repo := NewUserRepository(infra.RDB)
@@ -53,9 +51,8 @@ func TestDelete(t *testing.T) {
 
 func TestFindByID(t *testing.T) {
 	user := &User{
-		UserID:   "12345",
-		TeamID:   "122345",
-		UserName: "TestUser",
+		UserID: "12345",
+		TeamID: "122345",
 	}
 
 	repo := NewUserRepository(infra.RDB)

@@ -11,7 +11,6 @@ type User struct {
 	ID        uint   `gorm:"primary_key"`
 	UserID    string `gorm:"not null"`
 	TeamID    string `gorm:"not null"`
-	UserName  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }

@@ -57,19 +57,10 @@ func (a *authUsecaseImpl) SlackAuth(ri *AuthRequestInput) error {
 		return errors.Wrap(err, "have error while save team info")
 	}
 
-	sl := slack.New(or.AccessToken)
-
-	userIdent, err := sl.GetUserInfo(team.UserID)
-	if err != nil {
-		tx.Rollback()
-		infra.Swarn("can not get user info ", err)
-		return errors.Wrap(err, "have error while get user info")
-	}
-
+	// save user
 	user := &repository.User{}
-	user.UserID = userIdent.ID
-	user.TeamID = userIdent.TeamID
-	user.UserName = userIdent.Name
+	user.UserID = team.UserID
+	user.TeamID = team.TeamID
 
 	infra.Sdebug("save user info ", user)
 
