@@ -24,7 +24,7 @@ func SlackReqAuthMiddleware() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			// only auth for slack request
-			if strings.Contains(c.Request().URL.Path, "/slack") {
+			if strings.Contains(c.Request().URL.Path, "/slack/") {
 				var bodyBytes []byte
 				if c.Request().Body != nil {
 					bodyBytes, _ = ioutil.ReadAll(c.Request().Body)

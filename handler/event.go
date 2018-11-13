@@ -13,9 +13,6 @@ import (
 	"github.com/nlopes/slack/slackevents"
 )
 
-type eventRequestParams struct {
-}
-
 type verificationRequestParam struct {
 	Token     string `json:"token" form:"token"`
 	Challenge string `json:"challenge" form:"challenge"`
