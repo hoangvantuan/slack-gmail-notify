@@ -28,8 +28,8 @@ func NewAuthUsecase() AuthUsecase {
 func (a *authUsecaseImpl) SlackAuth(ri *AuthRequestInput) error {
 	or, err := slack.GetOAuthResponse(infra.Env.SlackClientID, infra.Env.SlackClientSecret, ri.Code, infra.Env.SlackRedirectedURL, infra.IsProduction())
 	if err != nil {
-		infra.Swarn("has error while get token from code", ri, err)
-		return errors.Wrap(err, "has error while get token from code")
+		infra.Swarn(errWhileGetToken, ri, err)
+		return errors.Wrap(err, errWhileGetToken)
 	}
 
 	tx := infra.RDB.Begin()
@@ -53,8 +53,8 @@ func (a *authUsecaseImpl) SlackAuth(ri *AuthRequestInput) error {
 	_, err = teamRepo.Add(team)
 	if err != nil {
 		tx.Rollback()
-		infra.Swarn("have error while save team info", err)
-		return errors.Wrap(err, "have error while save team info")
+		infra.Swarn(errWhileSaveTeam, err)
+		return errors.Wrap(err, errWhileSaveTeam)
 	}
 
 	// save user
@@ -69,8 +69,8 @@ func (a *authUsecaseImpl) SlackAuth(ri *AuthRequestInput) error {
 	_, err = userRepo.Add(user)
 	if err != nil {
 		tx.Rollback()
-		infra.Swarn("have error while save user info ", err)
-		return err
+		infra.Swarn(errWhileSaveUser, err)
+		return errors.Wrap(err, errWhileSaveUser)
 	}
 
 	tx.Commit()

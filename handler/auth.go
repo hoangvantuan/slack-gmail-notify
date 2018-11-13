@@ -52,8 +52,8 @@ func (a *authHandler) slackAuth(ctx echo.Context) error {
 	}
 
 	if err != nil {
-		infra.Swarn("request parameter is not valid", err)
-		return ctx.String(http.StatusBadRequest, "request parameter is not valid")
+		infra.Swarn(errNotValidParams, err)
+		return ctx.String(http.StatusBadRequest, errNotValidParams)
 	}
 
 	uc := usecase.NewAuthUsecase()
@@ -65,8 +65,8 @@ func (a *authHandler) slackAuth(ctx echo.Context) error {
 
 	err = uc.SlackAuth(ri)
 	if err != nil {
-		infra.Swarn("has error while save to database", err)
-		return ctx.String(http.StatusInternalServerError, "has error with database")
+		infra.Swarn(errWhileSaveDB, err)
+		return ctx.String(http.StatusInternalServerError, errWhileSaveDB)
 	}
 
 	return ctx.String(http.StatusOK, "thanks you for install app")
