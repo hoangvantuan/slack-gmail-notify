@@ -27,6 +27,7 @@ type GmailRepository interface {
 	Add(gmail *Gmail) (*Gmail, error)
 	DeleteByID(id uint) error
 	Update(gmail *Gmail) (*Gmail, error)
+	DeleteAllByUserID(userID string) error
 }
 
 type gmailRepositoryImpl struct {
@@ -94,4 +95,15 @@ func (t *gmailRepositoryImpl) Update(gmail *Gmail) (*Gmail, error) {
 	}
 
 	return gmail, nil
+}
+
+// DeleteAllByUserID delete all user by user id
+func (t *gmailRepositoryImpl) DeleteAllByUserID(userID string) error {
+	result := t.db.Where("user_id = ?", userID).Delete(Gmail{})
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	return nil
 }

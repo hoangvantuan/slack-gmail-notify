@@ -6,8 +6,9 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/mdshun/slack-gmail-notify/usecase"
+
 	"github.com/mdshun/slack-gmail-notify/infra"
-	"github.com/pkg/errors"
 
 	"github.com/labstack/echo"
 	"github.com/nlopes/slack/slackevents"
@@ -17,6 +18,10 @@ type verificationRequestParam struct {
 	Token     string `json:"token" form:"token"`
 	Challenge string `json:"challenge" form:"challenge"`
 	Type      string `json:"type" form:"type"`
+}
+
+type appUninstallRequestParam struct {
+	TeamID string `json:"team_id" form:"team_id"`
 }
 
 type eventHandler struct{}
@@ -47,11 +52,22 @@ func (e *eventHandler) handler(ctx echo.Context) error {
 	eventAPI, err := slackevents.ParseEvent(json.RawMessage(bodyBytes), optionNoVerifyToken)
 	if err != nil {
 		infra.Swarn("has error while parse event request ", err)
-		return errors.Wrap(err, "has error while parse event requests")
+		return nil
 	}
 
+	// handler verify url event
 	if eventAPI.Type == slackevents.URLVerification {
 		return verificationEventHandler(ctx)
+	}
+
+	if eventAPI.Type == slackevents.CallbackEvent {
+		innerEvent := eventAPI.InnerEvent
+
+		switch innerEvent.Data.(type) {
+		// handler app uninstall event
+		case *slackevents.AppUninstalledEvent:
+			return appUninstall(ctx, eventAPI.TeamID)
+		}
 	}
 
 	return nil
@@ -62,10 +78,24 @@ func verificationEventHandler(ctx echo.Context) error {
 
 	if err := ctx.Bind(vr); err != nil {
 		infra.Swarn("can not binding challenge request ", err)
-		return errors.Wrap(err, "can not binding challenge request")
 	}
 
 	ctx.String(http.StatusOK, vr.Challenge)
+
+	return nil
+}
+
+func appUninstall(ctx echo.Context, teamID string) error {
+	ctx.String(http.StatusOK, "ok")
+
+	uc := usecase.NewEventUsecase()
+
+	err := uc.UninstallApp(teamID)
+
+	if err != nil {
+		infra.Swarn("can not uninstall app", err)
+		return nil
+	}
 
 	return nil
 }

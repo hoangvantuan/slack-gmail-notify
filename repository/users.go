@@ -21,6 +21,8 @@ type UserRepository interface {
 	Add(user *User) (*User, error)
 	DeleteByID(id uint) error
 	Update(user *User) (*User, error)
+	FindAllByTeamID(teamID string) ([]User, error)
+	DeleteAllByTeamID(teamID string) error
 }
 
 type userRepositoryImpl struct {
@@ -88,4 +90,28 @@ func (t *userRepositoryImpl) Update(user *User) (*User, error) {
 	}
 
 	return user, nil
+}
+
+// FindAllByTeamID return all user with team id
+func (t *userRepositoryImpl) FindAllByTeamID(teamID string) ([]User, error) {
+	users := []User{}
+
+	result := t.db.Where("team_id = ?", teamID).Find(&users)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return users, nil
+}
+
+// DeleteAllByTeamID delete all user by teamid
+func (t *userRepositoryImpl) DeleteAllByTeamID(teamID string) error {
+	result := t.db.Where("team_id = ?", teamID).Delete(User{})
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	return nil
 }

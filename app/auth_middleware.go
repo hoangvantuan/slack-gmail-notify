@@ -14,9 +14,8 @@ import (
 	"github.com/nlopes/slack"
 )
 
-var (
-	// ErrCanNotVefiryRequest is can not vefiry error
-	ErrCanNotVefiryRequest = errors.New("can not verify slack request")
+const (
+	errCanNotVerifyRequest = "can not verify slack request"
 )
 
 // SlackReqAuthMiddleware is verify slack request
@@ -24,7 +23,7 @@ func SlackReqAuthMiddleware() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			// only auth for slack request
-			if strings.Contains(c.Request().URL.Path, "/slack/") {
+			if strings.Contains(c.Request().URL.Path, "/slack/") && !strings.Contains(c.Request().URL.Path, "/redirected") {
 				var bodyBytes []byte
 				if c.Request().Body != nil {
 					bodyBytes, _ = ioutil.ReadAll(c.Request().Body)
@@ -50,15 +49,15 @@ func validateSlackReq(header http.Header, body []byte) error {
 	sv, err := slack.NewSecretsVerifier(header, infra.Env.SlackSignSecret)
 
 	if err != nil {
-		infra.Swarn(ErrCanNotVefiryRequest, err)
-		return errors.Wrap(err, ErrCanNotVefiryRequest.Error())
+		infra.Swarn(errCanNotVerifyRequest, err)
+		return errors.Wrap(err, errCanNotVerifyRequest)
 	}
 
 	sv.Write(body)
 
 	if err := sv.Ensure(); err != nil {
-		infra.Swarn(ErrCanNotVefiryRequest, err)
-		return errors.Wrap(err, ErrCanNotVefiryRequest.Error())
+		infra.Swarn(errCanNotVerifyRequest, err)
+		return errors.Wrap(err, errCanNotVerifyRequest)
 	}
 
 	return nil
