@@ -38,6 +38,7 @@ func (a *authUsecaseImpl) SlackAuth(ri *AuthRequestInput) error {
 
 	infra.Sdebug("auth new team ", or)
 
+	// check team instated?
 	team.AccessToken = or.AccessToken
 	team.Scope = or.Scope
 	team.TeamName = or.TeamName
@@ -50,6 +51,38 @@ func (a *authUsecaseImpl) SlackAuth(ri *AuthRequestInput) error {
 
 	teamRepo := repository.NewTeamRepository(tx)
 
+	// check team was installed
+	oldteam, err := teamRepo.FindByTeamID(team.TeamID)
+	if err != nil {
+		tx.Rollback()
+		infra.Swarn(errWhileFindTeam, err)
+		return errors.Wrap(err, errWhileFindTeam)
+	}
+
+	// have old team
+	if oldteam != nil {
+		oldteam.AccessToken = or.AccessToken
+		oldteam.Scope = or.Scope
+		oldteam.TeamName = or.TeamName
+		oldteam.TeamID = or.TeamID
+		oldteam.UserID = or.UserID
+		oldteam.BotAccessToken = or.Bot.BotAccessToken
+		oldteam.BotUserID = or.Bot.BotUserID
+
+		_, err = teamRepo.Update(oldteam)
+
+		if err != nil {
+			tx.Rollback()
+			infra.Swarn(errWhileSaveTeam, err)
+			return errors.Wrap(err, errWhileSaveTeam)
+		}
+
+		tx.Commit()
+
+		return nil
+	}
+
+	// is new team
 	_, err = teamRepo.Add(team)
 	if err != nil {
 		tx.Rollback()

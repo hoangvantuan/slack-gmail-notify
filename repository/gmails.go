@@ -88,7 +88,7 @@ func (t *gmailRepositoryImpl) DeleteByID(id uint) error {
 
 // Update gmail
 func (t *gmailRepositoryImpl) Update(gmail *Gmail) (*Gmail, error) {
-	result := t.db.Update(gmail)
+	result := t.db.Save(gmail)
 
 	if result.Error != nil {
 		return nil, result.Error

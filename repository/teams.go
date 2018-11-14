@@ -85,7 +85,7 @@ func (t *teamRepositoryImpl) DeleteByTeamID(teamID string) error {
 
 // Update team
 func (t *teamRepositoryImpl) Update(team *Team) (*Team, error) {
-	result := t.db.Update(team)
+	result := t.db.Save(team)
 
 	if result.Error != nil {
 		return nil, result.Error

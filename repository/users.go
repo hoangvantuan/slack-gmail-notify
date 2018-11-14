@@ -83,7 +83,7 @@ func (t *userRepositoryImpl) DeleteByID(id uint) error {
 
 // Update user
 func (t *userRepositoryImpl) Update(user *User) (*User, error) {
-	result := t.db.Update(user)
+	result := t.db.Save(user)
 
 	if result.Error != nil {
 		return nil, result.Error
