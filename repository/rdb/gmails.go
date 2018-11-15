@@ -10,7 +10,7 @@ import (
 type Gmail struct {
 	ID              uint      `gorm:"primary_key"`
 	UserID          string    `gorm:"not null"`
-	Email           string    `gorm:"unique_index;not null"`
+	Email           string    `gorm:"not null"`
 	AccessToken     string    `gorm:"not null;size:1000"`
 	RefreshToken    string    `gorm:"not null;size:1000"`
 	TokenType       string    `gorm:"not null"`
@@ -28,7 +28,7 @@ type GmailRepository interface {
 	DeleteByID(id uint) error
 	Update(gmail *Gmail) (*Gmail, error)
 	DeleteAllByUserID(userID string) error
-	FindByEmail(email string) (*Gmail, error)
+	FindByEmail(email, userID string) (*Gmail, error)
 }
 
 type gmailRepositoryImpl struct {
@@ -110,9 +110,9 @@ func (t *gmailRepositoryImpl) DeleteAllByUserID(userID string) error {
 }
 
 // FindByEmail will find gmail by id
-func (t *gmailRepositoryImpl) FindByEmail(email string) (*Gmail, error) {
+func (t *gmailRepositoryImpl) FindByEmail(email, userID string) (*Gmail, error) {
 	gmail := &Gmail{}
-	result := t.db.Where("email = ?", email).First(gmail)
+	result := t.db.Where("email = ? AND user_id = ?", email, userID).First(gmail)
 
 	if result.Error != nil {
 		return nil, result.Error

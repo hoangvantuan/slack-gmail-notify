@@ -69,9 +69,30 @@ func (a *authUsecaseImpl) SlackAuth(ri *AuthRequestInput) error {
 	// check team was installed
 	oldteam, err := teamRepo.FindByTeamID(team.TeamID)
 	if err != nil {
-		tx.Rollback()
 		infra.Swarn(errWhileFindTeam, err)
-		return errors.Wrap(err, errWhileFindTeam)
+		// is new team
+		_, err = teamRepo.Add(team)
+		if err != nil {
+			infra.Swarn(errWhileSaveTeam, err)
+			return errors.Wrap(err, errWhileSaveTeam)
+		}
+
+		// save user
+		user := &rdb.User{}
+		user.UserID = team.UserID
+		user.TeamID = team.TeamID
+
+		infra.Sdebug("save user info ", user)
+
+		userRepo := rdb.NewUserRepository(tx)
+
+		_, err = userRepo.Add(user)
+		if err != nil {
+			tx.Rollback()
+			infra.Swarn(errWhileSaveUser, err)
+			return errors.Wrap(err, errWhileSaveUser)
+		}
+
 	}
 
 	// have old team
@@ -87,38 +108,9 @@ func (a *authUsecaseImpl) SlackAuth(ri *AuthRequestInput) error {
 		_, err = teamRepo.Update(oldteam)
 
 		if err != nil {
-			tx.Rollback()
 			infra.Swarn(errWhileSaveTeam, err)
 			return errors.Wrap(err, errWhileSaveTeam)
 		}
-
-		tx.Commit()
-
-		return nil
-	}
-
-	// is new team
-	_, err = teamRepo.Add(team)
-	if err != nil {
-		tx.Rollback()
-		infra.Swarn(errWhileSaveTeam, err)
-		return errors.Wrap(err, errWhileSaveTeam)
-	}
-
-	// save user
-	user := &rdb.User{}
-	user.UserID = team.UserID
-	user.TeamID = team.TeamID
-
-	infra.Sdebug("save user info ", user)
-
-	userRepo := rdb.NewUserRepository(tx)
-
-	_, err = userRepo.Add(user)
-	if err != nil {
-		tx.Rollback()
-		infra.Swarn(errWhileSaveUser, err)
-		return errors.Wrap(err, errWhileSaveUser)
 	}
 
 	tx.Commit()
@@ -187,7 +179,7 @@ func (a *authUsecaseImpl) GoogleAuth(ri *AuthRequestInput, rp *CommandRequestPar
 	gmailRepo := rdb.NewGmailRepository(infra.RDB)
 
 	// check email was added
-	oldgmail, err := gmailRepo.FindByEmail(profile.EmailAddress)
+	oldgmail, err := gmailRepo.FindByEmail(profile.EmailAddress, rp.UserID)
 
 	infra.Sdebug("old email ", oldgmail)
 
