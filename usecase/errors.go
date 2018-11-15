@@ -9,4 +9,6 @@ const (
 	errWhileDeleteGmail = "have error while delete gmail"
 	errWhileFindUser    = "have reror while find user"
 	errWhileFindTeam    = "have reror while find team"
+
+	errWhilePostMsg = "have error while post message"
 )

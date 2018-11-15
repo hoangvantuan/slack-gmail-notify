@@ -34,6 +34,7 @@ func Run() {
 
 	handler.BindAuthHandler(e)
 	handler.BindEventHandler(e)
+	handler.BindCommandHandler(e)
 
 	// Set API root.
 	e.GET("/", func(c echo.Context) error {
