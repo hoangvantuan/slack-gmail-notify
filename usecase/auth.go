@@ -44,6 +44,15 @@ func (a *authUsecaseImpl) SlackAuth(ri *AuthRequestInput) error {
 
 	infra.Sdebug("auth new team ", or)
 
+	// encode token
+	or.AccessToken, err = util.Encrypt(or.AccessToken, infra.Env.EncryptKey)
+	or.Bot.BotAccessToken, err = util.Encrypt(or.Bot.BotAccessToken, infra.Env.EncryptKey)
+
+	if err != nil {
+		infra.Swarn(errWhileEncryptToken, err)
+		return errors.Wrap(err, errWhileEncryptToken)
+	}
+
 	// check team instated?
 	team.AccessToken = or.AccessToken
 	team.Scope = or.Scope
