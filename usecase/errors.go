@@ -13,4 +13,7 @@ const (
 	errWhilePostMsg = "have error while post message"
 
 	errWhileGetGoogleToken = "have error while get google token"
+	errWhileFetchMail      = "have error while get email"
+
+	errWhileEncryptToken = "have erro while encypt token"
 )

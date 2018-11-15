@@ -1,6 +1,11 @@
 package usecase
 
 import (
+	"encoding/json"
+	"fmt"
+
+	"github.com/mdshun/slack-gmail-notify/util"
+
 	"github.com/mdshun/slack-gmail-notify/infra"
 	"github.com/mdshun/slack-gmail-notify/repository/rdb"
 	"github.com/nlopes/slack"
@@ -61,6 +66,8 @@ func (c *commandUsecaseImpl) MainMenu(rp *CommandRequestParams) error {
 func genInteractiveMenu(rp *CommandRequestParams) slack.Attachment {
 	at := slack.Attachment{}
 
+	pjson, _ := json.Marshal(rp)
+	pjsoneconded, _ := util.Encrypt(string(pjson), infra.Env.EncryptKey)
 	// generate action
 	addBtn := slack.AttachmentAction{
 		Name:  "AddGmailAccount",
@@ -68,7 +75,7 @@ func genInteractiveMenu(rp *CommandRequestParams) slack.Attachment {
 		Value: "AddGmailAccount",
 		Style: "primary",
 		Type:  "button",
-		URL:   infra.Env.APIHost + "/v1/auth/google",
+		URL:   fmt.Sprintf("%s/v1/auth/google?state=%s", infra.Env.APIHost, pjsoneconded),
 	}
 
 	settingBtn := slack.AttachmentAction{

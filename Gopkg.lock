@@ -244,6 +244,19 @@
   revision = "66b7b1311ac80bbafcd2daeef9a5e6e2cd1e2399"
 
 [[projects]]
+  branch = "master"
+  digest = "1:46affef8383ed5bf70ed4e55ec903c03219d5cd03ad5742cfa55746ee0d705de"
+  name = "google.golang.org/api"
+  packages = [
+    "gensupport",
+    "gmail/v1",
+    "googleapi",
+    "googleapi/internal/uritemplates",
+  ]
+  pruneopts = "UT"
+  revision = "83a9d304b1e613fc253e1e2710778642fe81af53"
+
+[[projects]]
   digest = "1:a623ed4965cad144a32551cb009b9bad9ad247c22ca1afdd934fc85d0c891f93"
   name = "google.golang.org/appengine"
   packages = [
@@ -283,7 +296,10 @@
     "github.com/nlopes/slack/slackevents",
     "github.com/pkg/errors",
     "go.uber.org/zap",
+    "golang.org/x/net/context",
     "golang.org/x/oauth2",
+    "google.golang.org/api/gmail/v1",
+    "google.golang.org/api/googleapi",
     "gopkg.in/go-playground/validator.v9",
   ]
   solver-name = "gps-cdcl"

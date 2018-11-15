@@ -12,9 +12,9 @@ type Team struct {
 	TeamName       string `gorm:"not null"`
 	UserID         string `gorm:"not null"`
 	Scope          string `gorm:"not null"`
-	AccessToken    string `gorm:"not null"`
+	AccessToken    string `gorm:"not null;size:1000"`
 	BotUserID      string
-	BotAccessToken string
+	BotAccessToken string `gorm:"size:1000"`
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 }

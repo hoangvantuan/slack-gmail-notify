@@ -8,14 +8,14 @@ import (
 
 // Gmail is gmails table
 type Gmail struct {
-	ID              uint   `gorm:"primary_key"`
-	UserID          string `gorm:"not null"`
-	Email           string `gorm:"unique_index;not null"`
-	AccessToken     string `gorm:"not null"`
-	RefreshToken    string `gorm:"not null"`
-	TokenType       string `gorm:"not null"`
-	Scope           string `gorm:"not null"`
-	ExpiryDate      string `gorm:"not null"`
+	ID              uint      `gorm:"primary_key"`
+	UserID          string    `gorm:"not null"`
+	Email           string    `gorm:"unique_index;not null"`
+	AccessToken     string    `gorm:"not null;size:1000"`
+	RefreshToken    string    `gorm:"not null;size:1000"`
+	TokenType       string    `gorm:"not null"`
+	Scope           string    `gorm:"not null"`
+	ExpiryDate      time.Time `gorm:"not null"`
 	NotifyChannelID string
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
@@ -28,6 +28,7 @@ type GmailRepository interface {
 	DeleteByID(id uint) error
 	Update(gmail *Gmail) (*Gmail, error)
 	DeleteAllByUserID(userID string) error
+	FindByEmail(email string) (*Gmail, error)
 }
 
 type gmailRepositoryImpl struct {
@@ -106,4 +107,20 @@ func (t *gmailRepositoryImpl) DeleteAllByUserID(userID string) error {
 	}
 
 	return nil
+}
+
+// FindByEmail will find gmail by id
+func (t *gmailRepositoryImpl) FindByEmail(email string) (*Gmail, error) {
+	gmail := &Gmail{}
+	result := t.db.Where("email = ?", email).First(gmail)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	if result.RecordNotFound() {
+		return nil, ErrRecordNotFound
+	}
+
+	return gmail, nil
 }

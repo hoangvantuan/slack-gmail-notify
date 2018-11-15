@@ -1,8 +1,11 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/mdshun/slack-gmail-notify/util"
 
 	"github.com/mdshun/slack-gmail-notify/usecase"
 	"golang.org/x/oauth2"
@@ -45,6 +48,8 @@ func (a *authHandler) slackAuthURL(ctx echo.Context) error {
 }
 
 func (a *authHandler) googleAuthURL(ctx echo.Context) error {
+	state := ctx.QueryParam("state")
+
 	conf := &oauth2.Config{
 		ClientID:     infra.Env.GoogleClientID,
 		ClientSecret: infra.Env.GoogleClientSecret,
@@ -58,7 +63,7 @@ func (a *authHandler) googleAuthURL(ctx echo.Context) error {
 
 	// Redirect user to consent page to ask for permission
 	// for the scopes specified above.
-	url := conf.AuthCodeURL("state", oauth2.AccessTypeOffline)
+	url := conf.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.ApprovalForce)
 
 	infra.Sdebug("redirect to ", url)
 
@@ -101,9 +106,23 @@ func (a *authHandler) slackAuth(ctx echo.Context) error {
 func (a *authHandler) googleAuth(ctx echo.Context) error {
 	rp := &authRequestParams{}
 
-	err := ctx.Bind(rp)
+	state := ctx.QueryParam("state")
+	decodedState, _ := util.Decrypt(state, infra.Env.EncryptKey)
+
+	infra.Sdebug("authen google token for ", decodedState)
+
+	secretInfo := &usecase.CommandRequestParams{}
+	err := json.Unmarshal([]byte(decodedState), secretInfo)
+
+	if err != nil {
+		infra.Swarn(errNotValidParams, err)
+		return ctx.String(http.StatusBadRequest, errNotValidParams)
+	}
+
+	err = ctx.Bind(rp)
 	if err == nil {
 		err = ctx.Validate(rp)
+		err = ctx.Validate(secretInfo)
 	}
 
 	if err != nil {
@@ -118,7 +137,7 @@ func (a *authHandler) googleAuth(ctx echo.Context) error {
 		State: rp.State,
 	}
 
-	err = uc.GoogleAuth(ri)
+	err = uc.GoogleAuth(ri, secretInfo)
 
 	if err != nil {
 		infra.Swarn(errWhileSaveDB, err)

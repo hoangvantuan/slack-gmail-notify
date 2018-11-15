@@ -3,10 +3,13 @@ package usecase
 import (
 	"github.com/mdshun/slack-gmail-notify/infra"
 	"github.com/mdshun/slack-gmail-notify/repository/rdb"
+	"github.com/mdshun/slack-gmail-notify/util"
 	"github.com/nlopes/slack"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
+	gmail "google.golang.org/api/gmail/v1"
+	"google.golang.org/api/googleapi"
 )
 
 // AuthRequestInput is auth request param
@@ -20,7 +23,7 @@ type authUsecaseImpl struct{}
 // AuthUsecase is auth interface
 type AuthUsecase interface {
 	SlackAuth(ri *AuthRequestInput) error
-	GoogleAuth(ri *AuthRequestInput) error
+	GoogleAuth(ri *AuthRequestInput, rp *CommandRequestParams) error
 }
 
 // NewAuthUsecase will return auth usecase
@@ -114,7 +117,7 @@ func (a *authUsecaseImpl) SlackAuth(ri *AuthRequestInput) error {
 	return nil
 }
 
-func (a *authUsecaseImpl) GoogleAuth(ri *AuthRequestInput) error {
+func (a *authUsecaseImpl) GoogleAuth(ri *AuthRequestInput, rp *CommandRequestParams) error {
 	ctx := context.Background()
 	conf := &oauth2.Config{
 		ClientID:     infra.Env.GoogleClientID,
@@ -134,6 +137,67 @@ func (a *authUsecaseImpl) GoogleAuth(ri *AuthRequestInput) error {
 	}
 
 	infra.Sdebug("get token google ", token)
+
+	// get gmail
+	client := conf.Client(ctx, token)
+
+	srv, err := gmail.New(client)
+
+	if err != nil {
+		infra.Swarn(errWhileFetchMail, err)
+		return errors.Wrap(err, errWhileFetchMail)
+	}
+
+	gUserProfileCall := srv.Users.GetProfile("me")
+	gUserProfileCall.Fields(googleapi.Field("emailAddress"))
+	profile, err := gUserProfileCall.Do()
+
+	if err != nil {
+		infra.Swarn(errWhileFetchMail, err)
+		return errors.Wrap(err, errWhileFetchMail)
+	}
+
+	// encode token
+	token.AccessToken, err = util.Encrypt(token.AccessToken, infra.Env.EncryptKey)
+	token.RefreshToken, err = util.Encrypt(token.RefreshToken, infra.Env.EncryptKey)
+
+	if err != nil {
+		infra.Swarn(errWhileEncryptToken, err)
+		return errors.Wrap(err, errWhileEncryptToken)
+	}
+
+	mygmail := &rdb.Gmail{
+		UserID:       rp.UserID,
+		AccessToken:  token.AccessToken,
+		RefreshToken: token.RefreshToken,
+		ExpiryDate:   token.Expiry,
+		TokenType:    token.TokenType,
+		Email:        profile.EmailAddress,
+	}
+
+	gmailRepo := rdb.NewGmailRepository(infra.RDB)
+
+	// check email was added
+	oldgmail, err := gmailRepo.FindByEmail(profile.EmailAddress)
+
+	infra.Sdebug("old email ", oldgmail)
+
+	if err != nil {
+		infra.Sdebug(err)
+		_, err = gmailRepo.Add(mygmail)
+	} else {
+		oldgmail.AccessToken = token.AccessToken
+		oldgmail.RefreshToken = token.RefreshToken
+		oldgmail.ExpiryDate = token.Expiry
+		oldgmail.TokenType = token.TokenType
+
+		_, err = gmailRepo.Update(oldgmail)
+	}
+
+	if err != nil {
+		infra.Sdebug(errWhileGetToken, err)
+		return errors.Wrap(err, errWhileGetToken)
+	}
 
 	return nil
 }
