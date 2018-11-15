@@ -23,6 +23,7 @@ type envConfig struct {
 	SlackSignSecret    string `env:"SLACK_SIGN_SECRET"`
 	SlackRedirectedURL string `env:"SLACK_REDIRECTED_URL"`
 	SlackScope         string `env:"SLACK_SCOPES"`
+	APIHost            string `env:"API_HOST"`
 }
 
 func setupEnv() {
