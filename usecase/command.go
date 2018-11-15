@@ -68,7 +68,7 @@ func genInteractiveMenu(rp *CommandRequestParams) slack.Attachment {
 		Value: "AddGmailAccount",
 		Style: "primary",
 		Type:  "button",
-		URL:   "https://google.com",
+		URL:   infra.Env.APIHost + "/v1/auth/google",
 	}
 
 	settingBtn := slack.AttachmentAction{
