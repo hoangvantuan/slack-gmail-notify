@@ -11,4 +11,6 @@ const (
 	errWhileFindTeam    = "have reror while find team"
 
 	errWhilePostMsg = "have error while post message"
+
+	errWhileGetGoogleToken = "have error while get google token"
 )

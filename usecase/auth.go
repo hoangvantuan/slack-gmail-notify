@@ -5,6 +5,8 @@ import (
 	"github.com/mdshun/slack-gmail-notify/repository"
 	"github.com/nlopes/slack"
 	"github.com/pkg/errors"
+	"golang.org/x/net/context"
+	"golang.org/x/oauth2"
 )
 
 // AuthRequestInput is auth request param
@@ -18,6 +20,7 @@ type authUsecaseImpl struct{}
 // AuthUsecase is auth interface
 type AuthUsecase interface {
 	SlackAuth(ri *AuthRequestInput) error
+	GoogleAuth(ri *AuthRequestInput) error
 }
 
 // NewAuthUsecase will return auth usecase
@@ -107,6 +110,30 @@ func (a *authUsecaseImpl) SlackAuth(ri *AuthRequestInput) error {
 	}
 
 	tx.Commit()
+
+	return nil
+}
+
+func (a *authUsecaseImpl) GoogleAuth(ri *AuthRequestInput) error {
+	ctx := context.Background()
+	conf := &oauth2.Config{
+		ClientID:     infra.Env.GoogleClientID,
+		ClientSecret: infra.Env.GoogleClientSecret,
+		Scopes:       infra.Env.GoogleScopes,
+		RedirectURL:  infra.Env.GoogleRedirectedURL,
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  infra.Env.GoogleAuthURL,
+			TokenURL: infra.Env.GoogleTokenURL,
+		},
+	}
+
+	token, err := conf.Exchange(ctx, ri.Code)
+	if err != nil {
+		infra.Swarn(errWhileGetGoogleToken, err)
+		return errors.Wrap(err, errWhileGetGoogleToken)
+	}
+
+	infra.Sdebug("get token google ", token)
 
 	return nil
 }
