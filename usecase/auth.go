@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"github.com/mdshun/slack-gmail-notify/infra"
-	"github.com/mdshun/slack-gmail-notify/repository"
+	"github.com/mdshun/slack-gmail-notify/repository/rdb"
 	"github.com/nlopes/slack"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
@@ -37,7 +37,7 @@ func (a *authUsecaseImpl) SlackAuth(ri *AuthRequestInput) error {
 
 	tx := infra.RDB.Begin()
 
-	team := &repository.Team{}
+	team := &rdb.Team{}
 
 	infra.Sdebug("auth new team ", or)
 
@@ -52,7 +52,7 @@ func (a *authUsecaseImpl) SlackAuth(ri *AuthRequestInput) error {
 
 	infra.Sdebug("save team info ", team)
 
-	teamRepo := repository.NewTeamRepository(tx)
+	teamRepo := rdb.NewTeamRepository(tx)
 
 	// check team was installed
 	oldteam, err := teamRepo.FindByTeamID(team.TeamID)
@@ -94,13 +94,13 @@ func (a *authUsecaseImpl) SlackAuth(ri *AuthRequestInput) error {
 	}
 
 	// save user
-	user := &repository.User{}
+	user := &rdb.User{}
 	user.UserID = team.UserID
 	user.TeamID = team.TeamID
 
 	infra.Sdebug("save user info ", user)
 
-	userRepo := repository.NewUserRepository(tx)
+	userRepo := rdb.NewUserRepository(tx)
 
 	_, err = userRepo.Add(user)
 	if err != nil {

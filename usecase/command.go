@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"github.com/mdshun/slack-gmail-notify/infra"
-	"github.com/mdshun/slack-gmail-notify/repository"
+	"github.com/mdshun/slack-gmail-notify/repository/rdb"
 	"github.com/nlopes/slack"
 	"github.com/pkg/errors"
 )
@@ -35,7 +35,7 @@ func NewCommandUsecase() CommandUsecase {
 }
 
 func (c *commandUsecaseImpl) MainMenu(rp *CommandRequestParams) error {
-	teamRepo := repository.NewTeamRepository(infra.RDB)
+	teamRepo := rdb.NewTeamRepository(infra.RDB)
 
 	team, err := teamRepo.FindByTeamID(rp.TeamID)
 	if err != nil {

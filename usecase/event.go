@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"github.com/mdshun/slack-gmail-notify/infra"
-	"github.com/mdshun/slack-gmail-notify/repository"
+	"github.com/mdshun/slack-gmail-notify/repository/rdb"
 )
 
 type eventUsecaseImpl struct{}
@@ -27,9 +27,9 @@ func (e *eventUsecaseImpl) UninstallApp(teamID string) (err error) {
 		}
 	}()
 
-	teamRepo := repository.NewTeamRepository(tx)
-	userRepo := repository.NewUserRepository(tx)
-	gmailRepo := repository.NewGmailRepository(tx)
+	teamRepo := rdb.NewTeamRepository(tx)
+	userRepo := rdb.NewUserRepository(tx)
+	gmailRepo := rdb.NewGmailRepository(tx)
 
 	err = teamRepo.DeleteByTeamID(teamID)
 
