@@ -29,6 +29,7 @@ type GmailRepository interface {
 	Update(gmail *Gmail) (*Gmail, error)
 	DeleteAllByUserID(userID string) error
 	FindByEmail(email, userID string) (*Gmail, error)
+	FindByUserID(userID string) ([]Gmail, error)
 }
 
 type gmailRepositoryImpl struct {
@@ -123,4 +124,20 @@ func (t *gmailRepositoryImpl) FindByEmail(email, userID string) (*Gmail, error) 
 	}
 
 	return gmail, nil
+}
+
+// FindByUserID will find gmail by id
+func (t *gmailRepositoryImpl) FindByUserID(userID string) ([]Gmail, error) {
+	gmails := []Gmail{}
+	result := t.db.Where("user_id = ?", userID).Find(&gmails)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	if result.RecordNotFound() {
+		return nil, ErrRecordNotFound
+	}
+
+	return gmails, nil
 }

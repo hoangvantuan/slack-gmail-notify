@@ -47,5 +47,12 @@ func (e *iteractiveHandler) handler(ctx echo.Context) error {
 		})
 	}
 
-	return nil
+	uc := usecase.NewIteractiveUsecase()
+
+	// implements setting button
+	if rp.Actions[0].Name == "setting" {
+		uc.OpenSettingDialog(rp)
+	}
+
+	return ctx.NoContent(http.StatusOK)
 }
