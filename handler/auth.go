@@ -82,8 +82,8 @@ func (a *authHandler) slackAuth(ctx echo.Context) error {
 	}
 
 	if err != nil {
-		infra.Swarn(errNotValidParams, err)
-		return ctx.String(http.StatusBadRequest, errNotValidParams)
+		infra.Swarn("error parameter is invalid", err)
+		return ctx.String(http.StatusBadRequest, "error parameter is invalid")
 	}
 
 	uc := usecase.NewAuthUsecase()
@@ -95,8 +95,8 @@ func (a *authHandler) slackAuth(ctx echo.Context) error {
 
 	err = uc.SlackAuth(ri)
 	if err != nil {
-		infra.Swarn(errWhileSaveDB, err)
-		return ctx.String(http.StatusInternalServerError, errWhileSaveDB)
+		infra.Swarn("error while save database", err)
+		return ctx.String(http.StatusInternalServerError, "error while save database")
 	}
 
 	return ctx.String(http.StatusOK, "thanks you for install app")
@@ -115,8 +115,8 @@ func (a *authHandler) googleAuth(ctx echo.Context) error {
 	err := json.Unmarshal([]byte(decodedState), secretInfo)
 
 	if err != nil {
-		infra.Swarn(errNotValidParams, err)
-		return ctx.String(http.StatusBadRequest, errNotValidParams)
+		infra.Swarn("error parameter is invalid", err)
+		return ctx.String(http.StatusBadRequest, "error parameter is invalid")
 	}
 
 	err = ctx.Bind(rp)
@@ -126,8 +126,8 @@ func (a *authHandler) googleAuth(ctx echo.Context) error {
 	}
 
 	if err != nil {
-		infra.Swarn(errNotValidParams, err)
-		return ctx.String(http.StatusBadRequest, errNotValidParams)
+		infra.Swarn("error parameter is invalid", err)
+		return ctx.String(http.StatusBadRequest, "error parameter is invalid")
 	}
 
 	uc := usecase.NewAuthUsecase()
@@ -140,8 +140,8 @@ func (a *authHandler) googleAuth(ctx echo.Context) error {
 	err = uc.GoogleAuth(ri, secretInfo)
 
 	if err != nil {
-		infra.Swarn(errWhileSaveDB, err)
-		return ctx.String(http.StatusInternalServerError, errWhileSaveDB)
+		infra.Swarn("error while save database", err)
+		return ctx.String(http.StatusInternalServerError, "error while save database")
 	}
 
 	return ctx.String(http.StatusOK, "thank you, add gmail account successfull!")

@@ -3,6 +3,7 @@ package usecase
 import (
 	"github.com/mdshun/slack-gmail-notify/infra"
 	"github.com/mdshun/slack-gmail-notify/repository/rdb"
+	"github.com/pkg/errors"
 )
 
 type eventUsecaseImpl struct{}
@@ -24,6 +25,8 @@ func (e *eventUsecaseImpl) UninstallApp(teamID string) (err error) {
 	defer func() {
 		if err != nil {
 			tx.Rollback()
+		} else {
+			tx.Commit()
 		}
 	}()
 
@@ -32,36 +35,26 @@ func (e *eventUsecaseImpl) UninstallApp(teamID string) (err error) {
 	gmailRepo := rdb.NewGmailRepository(tx)
 
 	err = teamRepo.DeleteByTeamID(teamID)
-
 	if err != nil {
-		infra.Swarn(errWhileDeleteTeam, err)
-		return
+		return errors.Wrap(err, "have error while delete team")
 	}
 
 	users, err := userRepo.FindAllByTeamID(teamID)
-
 	if err != nil {
-		infra.Swarn(errWhileFindUser, err)
-		return
+		return errors.Wrap(err, "have error while find user")
 	}
 
 	for _, user := range users {
 		err = gmailRepo.DeleteAllByUserID(user.UserID)
-
 		if err != nil {
-			infra.Swarn(errWhileDeleteGmail, err)
-			return
+			return errors.Wrap(err, "have error while delete email")
 		}
 	}
 
 	err = userRepo.DeleteAllByTeamID(teamID)
-
 	if err != nil {
-		infra.Swarn(errWhileDeleteUser, err)
-		return
+		return errors.Wrap(err, "have error while delete user")
 	}
-
-	tx.Commit()
 
 	return nil
 }

@@ -3,7 +3,6 @@ package usecase
 import (
 	"github.com/mdshun/slack-gmail-notify/infra"
 	"github.com/mdshun/slack-gmail-notify/repository/rdb"
-	"github.com/mdshun/slack-gmail-notify/util"
 	"github.com/nlopes/slack"
 	"github.com/pkg/errors"
 )
@@ -43,6 +42,7 @@ type iteractiveUsecaseImpl struct{}
 // IteractiveUsecase is event interface
 type IteractiveUsecase interface {
 	OpenSettingDialog(ir *IteractiveRequestParams) error
+	ListAccount(ir *IteractiveRequestParams) error
 }
 
 // NewIteractiveUsecase will return event usecase
@@ -51,17 +51,17 @@ func NewIteractiveUsecase() IteractiveUsecase {
 }
 
 func (i *iteractiveUsecaseImpl) OpenSettingDialog(ir *IteractiveRequestParams) error {
-	teamRepo := rdb.NewTeamRepository(infra.RDB)
-
-	team, err := teamRepo.FindByTeamID(ir.Team.ID)
+	slAPI, err := slackAPI(ir.Team.ID)
 	if err != nil {
-		return errors.Wrap(err, errWhileFindTeam)
+		return errors.Wrap(err, "have error while get slack client")
 	}
 
-	token, _ := util.Decrypt(team.BotAccessToken, infra.Env.EncryptKey)
-	slackAPI := slack.New(token)
+	dl, err := settingDialog(ir)
+	if err != nil {
+		return errors.Wrap(err, "have error while generate dialog")
+	}
 
-	err = slackAPI.OpenDialog(ir.TriggerID, settingDialog(slackAPI, ir))
+	err = slAPI.OpenDialog(ir.TriggerID, *dl)
 	if err != nil {
 		infra.Swarn("has error while open dialog", err)
 	}
@@ -69,12 +69,20 @@ func (i *iteractiveUsecaseImpl) OpenSettingDialog(ir *IteractiveRequestParams) e
 	return nil
 }
 
-func settingDialog(api *slack.Client, ir *IteractiveRequestParams) slack.Dialog {
+func (i *iteractiveUsecaseImpl) ListAccount(ir *IteractiveRequestParams) error {
+	return nil
+}
+
+func listAccount(ir *IteractiveRequestParams) {
+
+}
+
+func settingDialog(ir *IteractiveRequestParams) (*slack.Dialog, error) {
 	gmailRepo := rdb.NewGmailRepository(infra.RDB)
 	mails, err := gmailRepo.FindByUserID(ir.User.ID)
 	if err != nil {
 		// return empty dialog
-		return slack.Dialog{}
+		return nil, errors.Wrap(err, "have error while get list gmail")
 	}
 
 	elements := []slack.DialogElement{}
@@ -98,10 +106,10 @@ func settingDialog(api *slack.Client, ir *IteractiveRequestParams) slack.Dialog 
 
 	elements = append(elements, element)
 
-	return slack.Dialog{
+	return &slack.Dialog{
 		CallbackID:  "setting-dialog",
 		Title:       "Email list",
 		SubmitLabel: "Change",
 		Elements:    elements,
-	}
+	}, nil
 }

@@ -27,8 +27,8 @@ func (e *iteractiveHandler) handler(ctx echo.Context) error {
 	infra.Sdebug("payload ", payload)
 
 	if err := json.Unmarshal([]byte(payload), rp); err != nil {
-		infra.Swarn(errCanNotBindParam, err)
-		return nil
+		infra.Swarn("error can not bind parameter", err)
+		return ctx.NoContent(http.StatusOK)
 	}
 
 	infra.Sdebug("payload: ", rp)
@@ -51,7 +51,10 @@ func (e *iteractiveHandler) handler(ctx echo.Context) error {
 
 	// implements setting button
 	if rp.Actions[0].Name == "setting" {
-		uc.OpenSettingDialog(rp)
+		err := uc.OpenSettingDialog(rp)
+		if err != nil {
+			infra.Swarn("error whiel open dialog", err)
+		}
 	}
 
 	return ctx.NoContent(http.StatusOK)

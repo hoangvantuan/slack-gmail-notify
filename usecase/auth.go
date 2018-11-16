@@ -34,8 +34,7 @@ func NewAuthUsecase() AuthUsecase {
 func (a *authUsecaseImpl) SlackAuth(ri *AuthRequestInput) error {
 	or, err := slack.GetOAuthResponse(infra.Env.SlackClientID, infra.Env.SlackClientSecret, ri.Code, infra.Env.SlackRedirectedURL, infra.IsProduction())
 	if err != nil {
-		infra.Swarn(errWhileGetToken, ri, err)
-		return errors.Wrap(err, errWhileGetToken)
+		return errors.Wrap(err, "have error while get slack token")
 	}
 
 	tx := infra.RDB.Begin()
@@ -47,10 +46,8 @@ func (a *authUsecaseImpl) SlackAuth(ri *AuthRequestInput) error {
 	// encode token
 	or.AccessToken, err = util.Encrypt(or.AccessToken, infra.Env.EncryptKey)
 	or.Bot.BotAccessToken, err = util.Encrypt(or.Bot.BotAccessToken, infra.Env.EncryptKey)
-
 	if err != nil {
-		infra.Swarn(errWhileEncryptToken, err)
-		return errors.Wrap(err, errWhileEncryptToken)
+		return errors.Wrap(err, "have error while encypt token")
 	}
 
 	// check team instated?
@@ -69,12 +66,10 @@ func (a *authUsecaseImpl) SlackAuth(ri *AuthRequestInput) error {
 	// check team was installed
 	oldteam, err := teamRepo.FindByTeamID(team.TeamID)
 	if err != nil {
-		infra.Swarn(errWhileFindTeam, err)
 		// is new team
 		_, err = teamRepo.Add(team)
 		if err != nil {
-			infra.Swarn(errWhileSaveTeam, err)
-			return errors.Wrap(err, errWhileSaveTeam)
+			return errors.Wrap(err, "have error while save team")
 		}
 
 		// save user
@@ -89,10 +84,8 @@ func (a *authUsecaseImpl) SlackAuth(ri *AuthRequestInput) error {
 		_, err = userRepo.Add(user)
 		if err != nil {
 			tx.Rollback()
-			infra.Swarn(errWhileSaveUser, err)
-			return errors.Wrap(err, errWhileSaveUser)
+			return errors.Wrap(err, "have error while save user")
 		}
-
 	}
 
 	// have old team
@@ -108,8 +101,7 @@ func (a *authUsecaseImpl) SlackAuth(ri *AuthRequestInput) error {
 		_, err = teamRepo.Update(oldteam)
 
 		if err != nil {
-			infra.Swarn(errWhileSaveTeam, err)
-			return errors.Wrap(err, errWhileSaveTeam)
+			return errors.Wrap(err, "have error while save team")
 		}
 	}
 
@@ -133,8 +125,7 @@ func (a *authUsecaseImpl) GoogleAuth(ri *AuthRequestInput, rp *CommandRequestPar
 
 	token, err := conf.Exchange(ctx, ri.Code)
 	if err != nil {
-		infra.Swarn(errWhileGetGoogleToken, err)
-		return errors.Wrap(err, errWhileGetGoogleToken)
+		return errors.Wrap(err, "have error while get google token")
 	}
 
 	infra.Sdebug("get token google ", token)
@@ -143,28 +134,22 @@ func (a *authUsecaseImpl) GoogleAuth(ri *AuthRequestInput, rp *CommandRequestPar
 	client := conf.Client(ctx, token)
 
 	srv, err := gmail.New(client)
-
 	if err != nil {
-		infra.Swarn(errWhileFetchMail, err)
-		return errors.Wrap(err, errWhileFetchMail)
+		return errors.Wrap(err, "have error while creare gmail service")
 	}
 
 	gUserProfileCall := srv.Users.GetProfile("me")
 	gUserProfileCall.Fields(googleapi.Field("emailAddress"))
 	profile, err := gUserProfileCall.Do()
-
 	if err != nil {
-		infra.Swarn(errWhileFetchMail, err)
-		return errors.Wrap(err, errWhileFetchMail)
+		return errors.Wrap(err, "have error while fetch list email")
 	}
 
 	// encode token
 	token.AccessToken, err = util.Encrypt(token.AccessToken, infra.Env.EncryptKey)
 	token.RefreshToken, err = util.Encrypt(token.RefreshToken, infra.Env.EncryptKey)
-
 	if err != nil {
-		infra.Swarn(errWhileEncryptToken, err)
-		return errors.Wrap(err, errWhileEncryptToken)
+		return errors.Wrap(err, "have error while encypt token")
 	}
 
 	mygmail := &rdb.Gmail{
@@ -184,8 +169,10 @@ func (a *authUsecaseImpl) GoogleAuth(ri *AuthRequestInput, rp *CommandRequestPar
 	infra.Sdebug("old email ", oldgmail)
 
 	if err != nil {
-		infra.Sdebug(err)
 		_, err = gmailRepo.Add(mygmail)
+		if err != nil {
+			return errors.Wrap(err, "have error while save email")
+		}
 	} else {
 		oldgmail.AccessToken = token.AccessToken
 		oldgmail.RefreshToken = token.RefreshToken
@@ -193,11 +180,9 @@ func (a *authUsecaseImpl) GoogleAuth(ri *AuthRequestInput, rp *CommandRequestPar
 		oldgmail.TokenType = token.TokenType
 
 		_, err = gmailRepo.Update(oldgmail)
-	}
-
-	if err != nil {
-		infra.Sdebug(errWhileGetToken, err)
-		return errors.Wrap(err, errWhileGetToken)
+		if err != nil {
+			return errors.Wrap(err, "have error while update email")
+		}
 	}
 
 	return nil

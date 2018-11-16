@@ -25,8 +25,8 @@ func (e *commandHandler) handler(ctx echo.Context) error {
 	rp := &usecase.CommandRequestParams{}
 
 	if err := ctx.Bind(rp); err != nil {
-		infra.Swarn(errCanNotBindParam, err)
-		return nil
+		infra.Swarn("error can not bind parameter", err)
+		return ctx.NoContent(http.StatusOK)
 	}
 
 	uc := usecase.NewCommandUsecase()
@@ -34,8 +34,10 @@ func (e *commandHandler) handler(ctx echo.Context) error {
 	err := uc.MainMenu(rp)
 
 	if err != nil {
-		infra.Swarn(errWhileHandlerCommand, err)
+		infra.Swarn("error while handler command", err)
+		return ctx.NoContent(http.StatusOK)
 	}
 
-	return nil
+	return ctx.NoContent(http.StatusOK)
+
 }

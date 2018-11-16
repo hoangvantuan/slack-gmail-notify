@@ -43,15 +43,16 @@ func NewCommandUsecase() CommandUsecase {
 func (c *commandUsecaseImpl) MainMenu(rp *CommandRequestParams) error {
 	msgAt := genInteractiveMenu(rp)
 
-	msgatstr, _ := json.Marshal(msgAt)
+	msgatstr, err := json.Marshal(msgAt)
+	if err != nil {
+		return errors.Wrap(err, "have error while decode json")
+	}
 
 	infra.Sdebug(string(msgatstr))
 
-	_, err := http.Post(rp.ResponseURL, "application/json", bytes.NewReader(msgatstr))
-
+	_, err = http.Post(rp.ResponseURL, "application/json", bytes.NewReader(msgatstr))
 	if err != nil {
-		infra.Swarn(errWhilePostMsg, err)
-		return errors.Wrap(err, errWhilePostMsg)
+		return errors.Wrap(err, "have error while post message")
 	}
 
 	return nil
@@ -80,6 +81,14 @@ func genInteractiveMenu(rp *CommandRequestParams) slack.Msg {
 		Type:  "button",
 	}
 
+	listBtn := slack.AttachmentAction{
+		Name:  "list-account",
+		Text:  "List Account",
+		Value: "list-account",
+		Style: "primary",
+		Type:  "button",
+	}
+
 	closeBtn := slack.AttachmentAction{
 		Name:  "close",
 		Text:  "Close",
@@ -90,7 +99,7 @@ func genInteractiveMenu(rp *CommandRequestParams) slack.Msg {
 
 	at.Text = "Hi ! Happy to see you."
 	at.CallbackID = "main-menu"
-	at.Actions = []slack.AttachmentAction{addBtn, settingBtn, closeBtn}
+	at.Actions = []slack.AttachmentAction{addBtn, listBtn, settingBtn, closeBtn}
 
 	return slack.Msg{
 		Attachments: []slack.Attachment{at},
