@@ -53,7 +53,16 @@ func (e *iteractiveHandler) handler(ctx echo.Context) error {
 	if rp.Actions[0].Name == "setting" {
 		err := uc.OpenSettingDialog(rp)
 		if err != nil {
-			infra.Swarn("error whiel open dialog", err)
+			infra.Swarn("error while open dialog", err)
+			return ctx.NoContent(http.StatusOK)
+		}
+	}
+
+	if rp.Actions[0].Name == "list-account" {
+		err := uc.ListAccount(rp)
+		if err != nil {
+			infra.Swarn("error while get list account", err)
+			return ctx.NoContent(http.StatusOK)
 		}
 	}
 
