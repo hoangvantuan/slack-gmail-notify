@@ -47,7 +47,8 @@ func (c *commandUsecaseImpl) MainMenu(rp *CommandRequestParams) error {
 		return errors.Wrap(err, errWhileFindTeam)
 	}
 
-	slackAPI := slack.New(team.BotAccessToken)
+	token, _ := util.Decrypt(team.BotAccessToken, infra.Env.EncryptKey)
+	slackAPI := slack.New(token)
 
 	msgAt := genInteractiveMenu(rp)
 
