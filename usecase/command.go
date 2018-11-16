@@ -1,13 +1,14 @@
 package usecase
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/mdshun/slack-gmail-notify/util"
 
 	"github.com/mdshun/slack-gmail-notify/infra"
-	"github.com/mdshun/slack-gmail-notify/repository/rdb"
 	"github.com/nlopes/slack"
 	"github.com/pkg/errors"
 )
@@ -40,38 +41,30 @@ func NewCommandUsecase() CommandUsecase {
 }
 
 func (c *commandUsecaseImpl) MainMenu(rp *CommandRequestParams) error {
-	teamRepo := rdb.NewTeamRepository(infra.RDB)
-
-	team, err := teamRepo.FindByTeamID(rp.TeamID)
-	if err != nil {
-		return errors.Wrap(err, errWhileFindTeam)
-	}
-
-	token, _ := util.Decrypt(team.BotAccessToken, infra.Env.EncryptKey)
-	slackAPI := slack.New(token)
-
 	msgAt := genInteractiveMenu(rp)
 
-	ts, err := slackAPI.PostEphemeral(rp.ChannelID, rp.UserID, slack.MsgOptionAttachments(msgAt))
+	msgatstr, _ := json.Marshal(msgAt)
+
+	infra.Sdebug(string(msgatstr))
+
+	_, err := http.Post(rp.ResponseURL, "application/json", bytes.NewReader(msgatstr))
 
 	if err != nil {
 		infra.Swarn(errWhilePostMsg, err)
 		return errors.Wrap(err, errWhilePostMsg)
 	}
 
-	infra.Sdebug("Message successfully sent to channel ", rp.ChannelID, " for user ", rp.UserID, " at ", ts)
-
 	return nil
 }
 
-func genInteractiveMenu(rp *CommandRequestParams) slack.Attachment {
+func genInteractiveMenu(rp *CommandRequestParams) slack.Msg {
 	at := slack.Attachment{}
 
 	pjson, _ := json.Marshal(rp)
 	pjsoneconded, _ := util.Encrypt(string(pjson), infra.Env.EncryptKey)
 	// generate action
 	addBtn := slack.AttachmentAction{
-		Name:  "AddGmailAccount",
+		Name:  "add-gmail-account",
 		Text:  "Add Account",
 		Value: "AddGmailAccount",
 		Style: "primary",
@@ -96,8 +89,10 @@ func genInteractiveMenu(rp *CommandRequestParams) slack.Attachment {
 	}
 
 	at.Text = "Hi ! Happy to see you."
-	at.CallbackID = "MainMenu"
+	at.CallbackID = "main-menu"
 	at.Actions = []slack.AttachmentAction{addBtn, settingBtn, closeBtn}
 
-	return at
+	return slack.Msg{
+		Attachments: []slack.Attachment{at},
+	}
 }
