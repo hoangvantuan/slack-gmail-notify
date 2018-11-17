@@ -19,9 +19,6 @@ func BindCommandHandler(e *echo.Echo) {
 }
 
 func (e *commandHandler) handler(ctx echo.Context) error {
-	// allway return 200 status
-	ctx.NoContent(http.StatusOK)
-
 	rp := &usecase.CommandRequestParams{}
 
 	if err := ctx.Bind(rp); err != nil {

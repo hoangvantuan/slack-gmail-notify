@@ -52,7 +52,7 @@ func (e *eventHandler) handler(ctx echo.Context) error {
 	eventAPI, err := slackevents.ParseEvent(json.RawMessage(bodyBytes), optionNoVerifyToken)
 	if err != nil {
 		infra.Swarn("has error while parse event request ", err)
-		return nil
+		return ctx.NoContent(http.StatusOK)
 	}
 
 	// handler verify url event
@@ -70,7 +70,7 @@ func (e *eventHandler) handler(ctx echo.Context) error {
 		}
 	}
 
-	return nil
+	return ctx.NoContent(http.StatusOK)
 }
 
 func verificationEventHandler(ctx echo.Context) error {
@@ -78,11 +78,10 @@ func verificationEventHandler(ctx echo.Context) error {
 
 	if err := ctx.Bind(vr); err != nil {
 		infra.Swarn("can not binding challenge request ", err)
+		return ctx.NoContent(http.StatusOK)
 	}
 
-	ctx.String(http.StatusOK, vr.Challenge)
-
-	return nil
+	return ctx.String(http.StatusOK, vr.Challenge)
 }
 
 func appUninstall(ctx echo.Context, teamID string) error {
@@ -94,8 +93,8 @@ func appUninstall(ctx echo.Context, teamID string) error {
 
 	if err != nil {
 		infra.Swarn("can not uninstall app", err)
-		return nil
+		return ctx.NoContent(http.StatusOK)
 	}
 
-	return nil
+	return ctx.NoContent(http.StatusOK)
 }

@@ -16,9 +16,10 @@ import (
 type IteractiveRequestParams struct {
 	Type    string `json:"type"`
 	Actions []struct {
-		Name  string `json:"name"`
-		Type  string `json:"type"`
-		Value string `json:"value"`
+		Name            string                         `json:"name"`
+		Type            string                         `json:"type"`
+		Value           string                         `json:"value"`
+		SelectedOptions []slack.AttachmentActionOption `json:"selected_options"`
 	}
 	CallbackID string `json:"callback_id"`
 	Team       struct {
@@ -46,8 +47,9 @@ type iteractiveUsecaseImpl struct{}
 
 // IteractiveUsecase is event interface
 type IteractiveUsecase interface {
-	OpenSettingDialog(ir *IteractiveRequestParams) error
 	ListAccount(ir *IteractiveRequestParams) error
+	NotifyChannel(ir *IteractiveRequestParams) error
+	RemoveAccount(ir *IteractiveRequestParams) error
 }
 
 // NewIteractiveUsecase will return event usecase
@@ -55,27 +57,8 @@ func NewIteractiveUsecase() IteractiveUsecase {
 	return &iteractiveUsecaseImpl{}
 }
 
-func (i *iteractiveUsecaseImpl) OpenSettingDialog(ir *IteractiveRequestParams) error {
-	slAPI, err := slackAPI(ir.Team.ID)
-	if err != nil {
-		return errors.Wrap(err, "have error while get slack client")
-	}
-
-	dl, err := settingDialog(ir)
-	if err != nil {
-		return errors.Wrap(err, "have error while generate dialog")
-	}
-
-	err = slAPI.OpenDialog(ir.TriggerID, *dl)
-	if err != nil {
-		infra.Swarn("has error while open dialog", err)
-	}
-
-	return nil
-}
-
 func (i *iteractiveUsecaseImpl) ListAccount(ir *IteractiveRequestParams) error {
-	msg, err := listAccount(ir)
+	msg, err := listAccount(ir, "List gmail account you already registered")
 	if err != nil {
 		return errors.Wrap(err, "have error while get list acocunt")
 	}
@@ -93,12 +76,75 @@ func (i *iteractiveUsecaseImpl) ListAccount(ir *IteractiveRequestParams) error {
 	return nil
 }
 
-func listAccount(ir *IteractiveRequestParams) (*slack.Msg, error) {
+// TODO: need update worker
+func (i *iteractiveUsecaseImpl) NotifyChannel(ir *IteractiveRequestParams) error {
+	infra.Sdebug("notify account", ir)
+
+	gmailRepo := rdb.NewGmailRepository(infra.RDB)
+	gmailID, err := strconv.Atoi(ir.CallbackID)
+	if err != nil {
+		return errors.Wrap(err, "can not convert gmail id")
+	}
+
+	gmail, err := gmailRepo.FindByID(uint(gmailID))
+	if err != nil {
+		return errors.Wrap(err, "can not fetch gmail")
+	}
+	infra.Sdebug(gmail)
+
+	gmail.NotifyChannelID = ir.Actions[0].SelectedOptions[0].Value
+
+	_, err = gmailRepo.Update(gmail)
+	if err != nil {
+		return errors.Wrap(err, "can not update gmail")
+	}
+
+	return nil
+}
+
+// TODO: need remove worker
+func (i *iteractiveUsecaseImpl) RemoveAccount(ir *IteractiveRequestParams) error {
+	infra.Sdebug("remove account", ir)
+
+	gmailRepo := rdb.NewGmailRepository(infra.RDB)
+	gmailID, err := strconv.Atoi(ir.CallbackID)
+	if err != nil {
+		return errors.Wrap(err, "can not convert gmail id")
+	}
+
+	err = gmailRepo.DeleteByID(uint(gmailID))
+	if err != nil {
+		return errors.Wrap(err, "can not delete email with id")
+	}
+
+	msg, err := listAccount(ir, "List gmail account you already register")
+	if err != nil {
+		return errors.Wrap(err, "have error while get list acocunt")
+	}
+
+	msgjson, err := json.Marshal(msg)
+	if err != nil {
+		return errors.Wrap(err, "have error while marshal json")
+	}
+
+	_, err = http.Post(ir.ResponseURL, "application/json", bytes.NewReader(msgjson))
+	if err != nil {
+		return errors.Wrap(err, "have error while post message")
+	}
+
+	return nil
+}
+
+func listAccount(ir *IteractiveRequestParams, text string) (*slack.Msg, error) {
 	gmailRepo := rdb.NewGmailRepository(infra.RDB)
 	mails, err := gmailRepo.FindByUserID(ir.User.ID)
 	if err != nil {
 		// return empty dialog
 		return nil, errors.Wrap(err, "have error while get list gmail")
+	}
+
+	if len(mails) == 0 {
+		text = "You no have any gmail account, please add to start notify"
 	}
 
 	selectChannelBtn := func(value string) slack.AttachmentAction {
@@ -116,21 +162,14 @@ func listAccount(ir *IteractiveRequestParams) (*slack.Msg, error) {
 		}
 	}
 
-	updateBtn := slack.AttachmentAction{
-		Name:  "update-gmail",
-		Text:  "Update",
-		Value: "update-email",
-		Style: "primary",
-		Type:  "button",
-	}
-
-	removeBtn := slack.AttachmentAction{
-		Name:  "remove-gmail",
-		Text:  "Remove",
-		Value: "remove-email",
-		Style: "danger",
-		Type:  "button",
-	}
+	// value is gmail id
+	removeBtn :=
+		slack.AttachmentAction{
+			Name:  "remove-gmail",
+			Text:  "Remove",
+			Style: "danger",
+			Type:  "button",
+		}
 
 	closeBtn := slack.AttachmentAction{
 		Name:  "close",
@@ -155,7 +194,6 @@ func listAccount(ir *IteractiveRequestParams) (*slack.Msg, error) {
 		at.CallbackID = strconv.Itoa(int(email.ID))
 		at.Actions = []slack.AttachmentAction{
 			selectChannelBtn(email.NotifyChannelID),
-			updateBtn,
 			removeBtn,
 		}
 
@@ -167,44 +205,8 @@ func listAccount(ir *IteractiveRequestParams) (*slack.Msg, error) {
 	ats = append(ats, closeAt)
 
 	return &slack.Msg{
-		Text:        "List gmail account you already registered",
-		Attachments: ats,
-	}, nil
-}
-
-func settingDialog(ir *IteractiveRequestParams) (*slack.Dialog, error) {
-	gmailRepo := rdb.NewGmailRepository(infra.RDB)
-	mails, err := gmailRepo.FindByUserID(ir.User.ID)
-	if err != nil {
-		// return empty dialog
-		return nil, errors.Wrap(err, "have error while get list gmail")
-	}
-
-	elements := []slack.DialogElement{}
-	mailsOption := []slack.DialogSelectOption{}
-	for _, mail := range mails {
-		mailsOption = append(mailsOption, slack.DialogSelectOption{
-			Label: "Email",
-			Value: mail.Email,
-		})
-	}
-
-	element := slack.DialogInputSelect{
-		DialogInput: slack.DialogInput{
-			Type:  slack.InputTypeSelect,
-			Label: "Email",
-			Name:  "Email",
-		},
-		SelectedOptions: mails[0].Email,
-		Options:         mailsOption,
-	}
-
-	elements = append(elements, element)
-
-	return &slack.Dialog{
-		CallbackID:  "setting-dialog",
-		Title:       "Email list",
-		SubmitLabel: "Change",
-		Elements:    elements,
+		Text:            text,
+		ReplaceOriginal: true,
+		Attachments:     ats,
 	}, nil
 }

@@ -41,7 +41,7 @@ func NewCommandUsecase() CommandUsecase {
 }
 
 func (c *commandUsecaseImpl) MainMenu(rp *CommandRequestParams) error {
-	msgAt := genInteractiveMenu(rp)
+	msgAt := genInteractiveMenu(rp, "Hi, can i help you ?")
 
 	msgatstr, err := json.Marshal(msgAt)
 	if err != nil {
@@ -58,7 +58,7 @@ func (c *commandUsecaseImpl) MainMenu(rp *CommandRequestParams) error {
 	return nil
 }
 
-func genInteractiveMenu(rp *CommandRequestParams) slack.Msg {
+func genInteractiveMenu(rp *CommandRequestParams, text string) slack.Msg {
 	at := slack.Attachment{}
 
 	pjson, _ := json.Marshal(rp)
@@ -66,25 +66,25 @@ func genInteractiveMenu(rp *CommandRequestParams) slack.Msg {
 	// generate action
 	addBtn := slack.AttachmentAction{
 		Name:  "add-gmail-account",
-		Text:  "Add Account",
+		Text:  "Add Gmail",
 		Value: "AddGmailAccount",
 		Style: "primary",
 		Type:  "button",
 		URL:   fmt.Sprintf("%s/v1/auth/google?state=%s", infra.Env.APIHost, pjsoneconded),
 	}
 
-	settingBtn := slack.AttachmentAction{
-		Name:  "setting",
-		Text:  "Setting",
-		Value: "setting",
-		Style: "default",
-		Type:  "button",
-	}
+	// settingBtn := slack.AttachmentAction{
+	// 	Name:  "setting",
+	// 	Text:  "Setting",
+	// 	Value: "setting",
+	// 	Style: "default",
+	// 	Type:  "button",
+	// }
 
 	listBtn := slack.AttachmentAction{
-		Name:  "list-account",
-		Text:  "List Account",
-		Value: "list-account",
+		Name:  "list-gmail",
+		Text:  "List Gmails",
+		Value: "list-gmail",
 		Style: "primary",
 		Type:  "button",
 	}
@@ -97,11 +97,12 @@ func genInteractiveMenu(rp *CommandRequestParams) slack.Msg {
 		Type:  "button",
 	}
 
-	at.Text = "Hi ! Happy to see you."
 	at.CallbackID = "main-menu"
-	at.Actions = []slack.AttachmentAction{addBtn, listBtn, settingBtn, closeBtn}
+	at.Actions = []slack.AttachmentAction{addBtn, listBtn, closeBtn}
 
 	return slack.Msg{
-		Attachments: []slack.Attachment{at},
+		Text:            text,
+		ReplaceOriginal: true,
+		Attachments:     []slack.Attachment{at},
 	}
 }

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/nlopes/slack"
+
 	"github.com/mdshun/slack-gmail-notify/usecase"
 
 	"github.com/labstack/echo"
@@ -35,12 +37,7 @@ func (e *iteractiveHandler) handler(ctx echo.Context) error {
 
 	// Close button
 	if rp.Actions[0].Name == "close" {
-		return ctx.JSON(http.StatusOK, struct {
-			ResponseType    string `json:"response_type"`
-			Text            string `json:"text"`
-			ReplaceOriginal bool   `json:"replace_original"`
-			DeleteOriginal  bool   `json:"delete_original"`
-		}{
+		return ctx.JSON(http.StatusOK, slack.Msg{
 			ResponseType:    "ephemeral",
 			ReplaceOriginal: true,
 			DeleteOriginal:  true,
@@ -49,19 +46,26 @@ func (e *iteractiveHandler) handler(ctx echo.Context) error {
 
 	uc := usecase.NewIteractiveUsecase()
 
-	// implements setting button
-	if rp.Actions[0].Name == "setting" {
-		err := uc.OpenSettingDialog(rp)
+	if rp.Actions[0].Name == "list-gmail" {
+		err := uc.ListAccount(rp)
 		if err != nil {
-			infra.Swarn("error while open dialog", err)
+			infra.Swarn("error while get list account", err)
 			return ctx.NoContent(http.StatusOK)
 		}
 	}
 
-	if rp.Actions[0].Name == "list-account" {
-		err := uc.ListAccount(rp)
+	if rp.Actions[0].Name == "notify-channel" {
+		err := uc.NotifyChannel(rp)
 		if err != nil {
-			infra.Swarn("error while get list account", err)
+			infra.Swarn("error while update notify channel", err)
+			return ctx.NoContent(http.StatusOK)
+		}
+	}
+
+	if rp.Actions[0].Name == "remove-gmail" {
+		err := uc.RemoveAccount(rp)
+		if err != nil {
+			infra.Swarn("error while remove account", err)
 			return ctx.NoContent(http.StatusOK)
 		}
 	}
