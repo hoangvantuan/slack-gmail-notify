@@ -25,6 +25,7 @@ type TeamRepository interface {
 	Add(team *Team) (*Team, error)
 	DeleteByTeamID(teamID string) error
 	Update(team *Team) (*Team, error)
+	FindAllTeam() ([]Team, error)
 }
 
 type teamRepositoryImpl struct {
@@ -92,4 +93,17 @@ func (t *teamRepositoryImpl) Update(team *Team) (*Team, error) {
 	}
 
 	return team, nil
+}
+
+// FindAllTeam return all team info
+func (t *teamRepositoryImpl) FindAllTeam() ([]Team, error) {
+	teams := []Team{}
+
+	result := t.db.Find(&teams)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return teams, nil
 }

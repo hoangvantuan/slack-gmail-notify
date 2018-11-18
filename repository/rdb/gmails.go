@@ -8,7 +8,7 @@ import (
 
 // Gmail is gmails table
 type Gmail struct {
-	ID              uint      `gorm:"primary_key"`
+	ID              int       `gorm:"primary_key"`
 	UserID          string    `gorm:"not null"`
 	Email           string    `gorm:"not null"`
 	AccessToken     string    `gorm:"not null;size:1000"`
@@ -23,9 +23,9 @@ type Gmail struct {
 
 // GmailRepository is defind interface for team
 type GmailRepository interface {
-	FindByID(id uint) (*Gmail, error)
+	FindByID(id int) (*Gmail, error)
 	Add(gmail *Gmail) (*Gmail, error)
-	DeleteByID(id uint) error
+	DeleteByID(id int) error
 	Update(gmail *Gmail) (*Gmail, error)
 	DeleteAllByUserID(userID string) error
 	FindByEmail(email, userID string) (*Gmail, error)
@@ -47,7 +47,7 @@ func NewGmailRepository(db *gorm.DB) GmailRepository {
 }
 
 // FindByID will find gmail by id
-func (t *gmailRepositoryImpl) FindByID(id uint) (*Gmail, error) {
+func (t *gmailRepositoryImpl) FindByID(id int) (*Gmail, error) {
 	gmail := &Gmail{}
 	result := t.db.First(gmail, id)
 
@@ -78,7 +78,7 @@ func (t *gmailRepositoryImpl) Add(gmail *Gmail) (*Gmail, error) {
 }
 
 // DeleteByID is delete gmail by id
-func (t *gmailRepositoryImpl) DeleteByID(id uint) error {
+func (t *gmailRepositoryImpl) DeleteByID(id int) error {
 	result := t.db.Where("id = ?", id).Delete(Gmail{})
 
 	if result.Error != nil {

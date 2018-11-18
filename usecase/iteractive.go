@@ -86,7 +86,7 @@ func (i *iteractiveUsecaseImpl) NotifyChannel(ir *IteractiveRequestParams) error
 		return errors.Wrap(err, "can not convert gmail id")
 	}
 
-	gmail, err := gmailRepo.FindByID(uint(gmailID))
+	gmail, err := gmailRepo.FindByID(gmailID)
 	if err != nil {
 		return errors.Wrap(err, "can not fetch gmail")
 	}
@@ -112,7 +112,7 @@ func (i *iteractiveUsecaseImpl) RemoveAccount(ir *IteractiveRequestParams) error
 		return errors.Wrap(err, "can not convert gmail id")
 	}
 
-	err = gmailRepo.DeleteByID(uint(gmailID))
+	err = gmailRepo.DeleteByID(gmailID)
 	if err != nil {
 		return errors.Wrap(err, "can not delete email with id")
 	}
@@ -191,7 +191,7 @@ func listAccount(ir *IteractiveRequestParams, text string) (*slack.Msg, error) {
 	for _, email := range mails {
 		at := slack.Attachment{}
 		at.Text = email.Email
-		at.CallbackID = strconv.Itoa(int(email.ID))
+		at.CallbackID = strconv.Itoa(email.ID)
 		at.Actions = []slack.AttachmentAction{
 			selectChannelBtn(email.NotifyChannelID),
 			removeBtn,

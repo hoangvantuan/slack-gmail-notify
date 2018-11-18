@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/mdshun/slack-gmail-notify/handler"
+	"github.com/mdshun/slack-gmail-notify/worker"
 	"github.com/mediadotech/distribution-backend/cmd/public-api/validator"
 
 	"github.com/labstack/echo"
@@ -43,5 +44,6 @@ func Run() {
 	})
 
 	infra.Setup()
+	worker.SetupNotifiers()
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%s", infra.Env.Port)))
 }
