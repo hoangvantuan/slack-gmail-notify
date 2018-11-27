@@ -8,6 +8,8 @@ import (
 
 	"github.com/mdshun/slack-gmail-notify/infra"
 	"github.com/mdshun/slack-gmail-notify/repository/rdb"
+	"github.com/mdshun/slack-gmail-notify/util"
+	"github.com/mdshun/slack-gmail-notify/worker"
 	"github.com/nlopes/slack"
 	"github.com/pkg/errors"
 )
@@ -99,6 +101,16 @@ func (i *iteractiveUsecaseImpl) NotifyChannel(ir *IteractiveRequestParams) error
 		return errors.Wrap(err, "can not update gmail")
 	}
 
+	slackAPI, err := util.SlackAPI(ir.Team.ID)
+	if err != nil {
+		return errors.Wrap(err, "error while init slack client")
+	}
+
+	err = worker.Jobs.NotifyGmail(gmail, slackAPI)
+	if err != nil {
+		return errors.Wrap(err, "error while notify gmail for new channel")
+	}
+
 	return nil
 }
 
@@ -116,6 +128,11 @@ func (i *iteractiveUsecaseImpl) RemoveAccount(ir *IteractiveRequestParams) error
 	if err != nil {
 		return errors.Wrap(err, "can not delete email with id")
 	}
+
+	// Stop notify gmail
+	worker.Jobs.StopNotifyGmail(&rdb.Gmail{
+		ID: gmailID,
+	})
 
 	msg, err := listAccount(ir, "List gmail account you already register")
 	if err != nil {

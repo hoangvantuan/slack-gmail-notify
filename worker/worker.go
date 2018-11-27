@@ -21,7 +21,7 @@ const (
 type jobs map[int]*scheduler.Job
 
 // Jobs is list job
-var Jobs Notifiers
+var Jobs jobs
 
 // Notifiers is interface defind method for job
 type Notifiers interface {
@@ -36,7 +36,7 @@ type Notifiers interface {
 
 // SetupNotifiers is begin notify
 func SetupNotifiers() error {
-	Jobs := make(jobs)
+	Jobs = make(jobs)
 
 	err := Jobs.NotifyTeams()
 	if err != nil {
@@ -103,6 +103,9 @@ func (j *jobs) NotifyUser(user *rdb.User, apiSlack *slack.Client) error {
 }
 
 func (j *jobs) NotifyGmail(gmail *rdb.Gmail, apiSlack *slack.Client) error {
+	// check email is working in job
+	j.StopNotifyGmail(gmail)
+
 	job, err := scheduler.Every(5).Seconds().Run(func() {
 		notify(gmail, apiSlack)
 	})
@@ -117,14 +120,45 @@ func (j *jobs) NotifyGmail(gmail *rdb.Gmail, apiSlack *slack.Client) error {
 }
 
 func (j *jobs) StopNotifyTeam(team *rdb.Team) error {
+	userRepo := rdb.NewUserRepository(infra.RDB)
+	users, err := userRepo.FindAllByTeamID(team.TeamID)
+	if err != nil {
+		return errors.Wrap(err, "error while get all users")
+	}
+
+	for _, user := range users {
+		err := j.StopNotifyUser(&user)
+		if err != nil {
+			return errors.Wrap(err, "error while notify user")
+		}
+	}
 	return nil
 }
 
-func (j *jobs) StopNotifyUser(user *rdb.User, apiSlack *slack.Client) error {
+func (j *jobs) StopNotifyUser(user *rdb.User) error {
+	gmailRepo := rdb.NewGmailRepository(infra.RDB)
+
+	gmails, err := gmailRepo.FindByUserID(user.UserID)
+	if err != nil {
+		return errors.Wrap(err, "error while get list gmails of user")
+	}
+
+	for _, gmail := range gmails {
+		err = j.StopNotifyGmail(&gmail)
+		if err != nil {
+			return errors.Wrap(err, "error while notify gmail")
+		}
+	}
 	return nil
 }
 
-func (j *jobs) StopNotifyGmail(gmail *rdb.Gmail, apiSlack *slack.Client) error {
+func (j *jobs) StopNotifyGmail(gmail *rdb.Gmail) error {
+	if (*j)[gmail.ID] != nil {
+		infra.Sdebug("stopping notify for email ", gmail.ID)
+		curJob := (*j)[gmail.ID]
+		curJob.Quit <- true
+	}
+
 	return nil
 }
 
