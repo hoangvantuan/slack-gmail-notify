@@ -193,17 +193,29 @@ func notify(gmail *rdb.Gmail, apiSlack *slack.Client) {
 	srv, err := gm.New(client)
 	if err != nil {
 		infra.Sdebug(err, "have error while creare gmail service")
+		return
 	}
 
 	msgRes, err := srv.Users.Messages.List("me").LabelIds(labelUnread).Do()
 	if err != nil {
 		infra.Sdebug("have error while get gmail", err)
+		return
 	}
 
 	for _, msg := range msgRes.Messages {
+		// Remove UNREAD label
+		_, err := srv.Users.Messages.Modify("me", msg.Id, &gm.ModifyMessageRequest{
+			RemoveLabelIds: []string{labelUnread},
+		}).Do()
+		if err != nil {
+			infra.Sdebug("can not remove unread label ", msg.Id, err)
+			return
+		}
+
 		_, _, err = apiSlack.PostMessage(gmail.NotifyChannelID, msg.Id, slack.PostMessageParameters{})
 		if err != nil {
 			infra.Sdebug("have error while post message", err)
+			return
 		}
 	}
 }
