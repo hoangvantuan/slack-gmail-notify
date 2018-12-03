@@ -2,6 +2,7 @@ package worker
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/carlescere/scheduler"
 	"github.com/mdshun/slack-gmail-notify/infra"
@@ -192,31 +193,54 @@ func notify(gmail *rdb.Gmail, apiSlack *slack.Client) {
 
 	srv, err := gm.New(client)
 	if err != nil {
-		infra.Sdebug(err, "have error while creare gmail service")
+		infra.Swarn(err, "have error while creare gmail service")
 		return
 	}
 
 	msgRes, err := srv.Users.Messages.List("me").LabelIds(labelUnread).Do()
 	if err != nil {
-		infra.Sdebug("have error while get gmail", err)
+		infra.Swarn("have error while get gmail", err)
 		return
 	}
 
 	for _, msg := range msgRes.Messages {
 
-		_, _, err = apiSlack.PostMessage(gmail.NotifyChannelID, msg.Id, slack.PostMessageParameters{})
+		infra.Sdebug(msg.Id)
+
+		msgDetails, err := srv.Users.Messages.Get("me", msg.Id).Do()
 		if err != nil {
-			infra.Sdebug("have error while post message", err)
+			infra.Swarn("can not get detail gmail", msg.Id)
+			return
+		}
+
+		// get data
+		var from, subject string
+		for _, header := range msgDetails.Payload.Headers {
+			if header.Name == "From" {
+				from = header.Value
+			}
+
+			if header.Name == "Subject" {
+				subject = header.Value
+			}
+		}
+
+		slackMsg := fmt.Sprintf("*FROM* : %s \n *SUBJECT* : %s \n *MESSAGE* : \n %s", from, subject, msgDetails.Snippet)
+		_, _, err = apiSlack.PostMessage(gmail.NotifyChannelID, slackMsg, slack.PostMessageParameters{
+			Markdown: true,
+		})
+		if err != nil {
+			infra.Swarn("have error while post message", err)
 			return
 		}
 
 		// Remove UNREAD label
-		_, err := srv.Users.Messages.Modify("me", msg.Id, &gm.ModifyMessageRequest{
-			RemoveLabelIds: []string{labelUnread},
-		}).Do()
-		if err != nil {
-			infra.Sdebug("can not remove unread label ", msg.Id, err)
-			return
-		}
+		// _, err := srv.Users.Messages.Modify("me", msg.Id, &gm.ModifyMessageRequest{
+		// 	RemoveLabelIds: []string{labelUnread},
+		// }).Do()
+		// if err != nil {
+		// 	infra.Sdebug("can not remove unread label ", msg.Id, err)
+		// 	return
+		// }
 	}
 }
