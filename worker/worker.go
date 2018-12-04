@@ -1,7 +1,7 @@
 package worker
 
 import (
-	"context"
+	"encoding/base64"
 	"fmt"
 
 	"github.com/carlescere/scheduler"
@@ -11,11 +11,11 @@ import (
 	"github.com/nlopes/slack"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
-	gm "google.golang.org/api/gmail/v1"
 )
 
 const (
 	labelUnread = "UNREAD"
+	fetchTimes  = 10
 )
 
 // Job is define job with ID
@@ -107,7 +107,7 @@ func (j *jobs) NotifyGmail(gmail *rdb.Gmail, apiSlack *slack.Client) error {
 	// check email is working in job
 	j.StopNotifyGmail(gmail)
 
-	job, err := scheduler.Every(5).Seconds().Run(func() {
+	job, err := scheduler.Every(fetchTimes).Seconds().Run(func() {
 		notify(gmail, apiSlack)
 	})
 	if err != nil {
@@ -168,30 +168,12 @@ func notify(gmail *rdb.Gmail, apiSlack *slack.Client) {
 		return
 	}
 
-	accessToken, _ := util.Decrypt(gmail.AccessToken, infra.Env.EncryptKey)
-	refreshToken, _ := util.Decrypt(gmail.RefreshToken, infra.Env.EncryptKey)
-
-	conf := &oauth2.Config{
-		ClientID:     infra.Env.GoogleClientID,
-		ClientSecret: infra.Env.GoogleClientSecret,
-		Scopes:       infra.Env.GoogleScopes,
-		RedirectURL:  infra.Env.GoogleRedirectedURL,
-		Endpoint: oauth2.Endpoint{
-			AuthURL:  infra.Env.GoogleAuthURL,
-			TokenURL: infra.Env.GoogleTokenURL,
-		},
-	}
-	token := &oauth2.Token{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
+	srv, err := util.GmailSrv(&oauth2.Token{
+		AccessToken:  gmail.AccessToken,
+		RefreshToken: gmail.RefreshToken,
 		TokenType:    gmail.TokenType,
 		Expiry:       gmail.ExpiryDate,
-	}
-
-	// get gmail
-	client := conf.Client(context.Background(), token)
-
-	srv, err := gm.New(client)
+	})
 	if err != nil {
 		infra.Swarn(err, "have error while creare gmail service")
 		return
@@ -203,8 +185,9 @@ func notify(gmail *rdb.Gmail, apiSlack *slack.Client) {
 		return
 	}
 
+	var ids []string
 	for _, msg := range msgRes.Messages {
-
+		ids = append(ids, msg.Id)
 		infra.Sdebug(msg.Id)
 
 		msgDetails, err := srv.Users.Messages.Get("me", msg.Id).Do()
@@ -214,7 +197,7 @@ func notify(gmail *rdb.Gmail, apiSlack *slack.Client) {
 		}
 
 		// get data
-		var from, subject string
+		var from, subject, cc, content string
 		for _, header := range msgDetails.Payload.Headers {
 			if header.Name == "From" {
 				from = header.Value
@@ -223,24 +206,46 @@ func notify(gmail *rdb.Gmail, apiSlack *slack.Client) {
 			if header.Name == "Subject" {
 				subject = header.Value
 			}
+
+			if header.Name == "Cc" {
+				cc = header.Value
+			}
 		}
 
-		slackMsg := fmt.Sprintf("*FROM* : %s \n *SUBJECT* : %s \n *MESSAGE* : \n %s", from, subject, msgDetails.Snippet)
-		_, _, err = apiSlack.PostMessage(gmail.NotifyChannelID, slackMsg, slack.PostMessageParameters{
-			Markdown: true,
+		if msgDetails.Payload.MimeType == "text/plain" || msgDetails.Payload.MimeType == "multipart/alternative" {
+			for _, part := range msgDetails.Payload.Parts {
+				if part.MimeType == "text/plain" {
+					contentByte, err := base64.URLEncoding.DecodeString(part.Body.Data)
+					if err != nil {
+						infra.Swarn("can not decode message", err)
+						content = "can not parse message"
+					} else {
+						content = string(contentByte)
+					}
+				}
+			}
+		} else {
+			content = msgDetails.Snippet
+		}
+
+		_, err = apiSlack.UploadFile(slack.FileUploadParameters{
+			Filetype: "post",
+			Channels: []string{gmail.NotifyChannelID},
+			Content:  fmt.Sprintf("## FROM: %s\n## CC: %s\n\n%s", from, cc, content),
+			Filename: subject,
 		})
 		if err != nil {
 			infra.Swarn("have error while post message", err)
 			return
 		}
-
-		// Remove UNREAD label
-		// _, err := srv.Users.Messages.Modify("me", msg.Id, &gm.ModifyMessageRequest{
-		// 	RemoveLabelIds: []string{labelUnread},
-		// }).Do()
-		// if err != nil {
-		// 	infra.Sdebug("can not remove unread label ", msg.Id, err)
-		// 	return
-		// }
 	}
+
+	// Remove all UNREAD label
+	// err = srv.Users.Messages.BatchModify("me", &gm.BatchModifyMessagesRequest{
+	// 	Ids: ids,
+	// }).Do()
+	// if err != nil {
+	// 	infra.Sdebug("can not remove unread label ", ids, err)
+	// 	return
+	// }
 }
