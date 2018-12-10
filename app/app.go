@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/mdshun/slack-gmail-notify/handler"
-	"github.com/mdshun/slack-gmail-notify/worker"
-	"github.com/mediadotech/distribution-backend/cmd/public-api/validator"
-
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	"github.com/mdshun/slack-gmail-notify/handler"
 	"github.com/mdshun/slack-gmail-notify/infra"
+	"github.com/mdshun/slack-gmail-notify/worker"
+	"github.com/mediadotech/distribution-backend/cmd/public-api/validator"
 )
 
 // Run is start app
@@ -44,6 +43,6 @@ func Run() {
 	})
 
 	infra.Setup()
-	worker.SetupNotifiers()
+	worker.Setup()
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%s", infra.Env.Port)))
 }

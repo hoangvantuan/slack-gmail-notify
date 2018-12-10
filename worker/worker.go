@@ -1,9 +1,6 @@
 package worker
 
 import (
-	"encoding/base64"
-	"fmt"
-
 	"github.com/carlescere/scheduler"
 	"github.com/mdshun/slack-gmail-notify/infra"
 	"github.com/mdshun/slack-gmail-notify/repository/rdb"
@@ -14,40 +11,37 @@ import (
 )
 
 const (
-	labelUnread = "UNREAD"
-	fetchTimes  = 10
+	fetchTimes = 10
 )
 
 // Job is define job with ID
-type jobs map[int]*scheduler.Job
+var jobs map[int]*scheduler.Job
 
-// Jobs is list job
-var Jobs jobs
-
-// Notifiers is interface defind method for job
-type Notifiers interface {
-	NotifyTeams() error
-	NotifyTeam(team *rdb.Team) error
-	NotifyUser(user *rdb.User, apiSlack *slack.Client) error
-	NotifyGmail(gmail *rdb.Gmail, apiSlack *slack.Client) error
-	StopNotifyTeam(team *rdb.Team) error
-	StopNotifyUser(user *rdb.User, apiSlack *slack.Client) error
-	StopNotifyGmail(gmail *rdb.Gmail, apiSlack *slack.Client) error
+type messages struct {
+	m   []*message
+	ids []string
 }
 
-// SetupNotifiers is begin notify
-func SetupNotifiers() error {
-	Jobs = make(jobs)
+type message struct {
+	ID      string
+	From    string
+	CC      string
+	Subject string
+	Body    string
+}
 
-	err := Jobs.NotifyTeams()
+// Setup -
+func Setup() {
+	jobs = make(map[int]*scheduler.Job)
+
+	err := NotifyTeams()
 	if err != nil {
 		panic(err)
 	}
-
-	return nil
 }
 
-func (j *jobs) NotifyTeams() error {
+// NotifyTeams -
+func NotifyTeams() error {
 	teamRepo := rdb.NewTeamRepository(infra.RDB)
 
 	teams, err := teamRepo.FindAllTeam()
@@ -56,7 +50,7 @@ func (j *jobs) NotifyTeams() error {
 	}
 
 	for _, team := range teams {
-		err = j.NotifyTeam(&team)
+		err = NotifyTeam(&team)
 		if err != nil {
 			return errors.Wrap(err, "error while notify all team")
 		}
@@ -65,7 +59,8 @@ func (j *jobs) NotifyTeams() error {
 	return nil
 }
 
-func (j *jobs) NotifyTeam(team *rdb.Team) error {
+// NotifyTeam -
+func NotifyTeam(team *rdb.Team) error {
 	slackAPI, err := util.SlackAPI(team.TeamID)
 	if err != nil {
 		return errors.Wrap(err, "error while init slack client")
@@ -78,7 +73,7 @@ func (j *jobs) NotifyTeam(team *rdb.Team) error {
 	}
 
 	for _, user := range users {
-		err := j.NotifyUser(&user, slackAPI)
+		err := NotifyUser(&user, slackAPI)
 		if err != nil {
 			return errors.Wrap(err, "error while notify user")
 		}
@@ -86,7 +81,8 @@ func (j *jobs) NotifyTeam(team *rdb.Team) error {
 	return nil
 }
 
-func (j *jobs) NotifyUser(user *rdb.User, apiSlack *slack.Client) error {
+// NotifyUser -
+func NotifyUser(user *rdb.User, apiSlack *slack.Client) error {
 	gmailRepo := rdb.NewGmailRepository(infra.RDB)
 
 	gmails, err := gmailRepo.FindByUserID(user.UserID)
@@ -95,7 +91,7 @@ func (j *jobs) NotifyUser(user *rdb.User, apiSlack *slack.Client) error {
 	}
 
 	for _, gmail := range gmails {
-		err = j.NotifyGmail(&gmail, apiSlack)
+		err = NotifyGmail(&gmail, apiSlack)
 		if err != nil {
 			return errors.Wrap(err, "error while notify gmail")
 		}
@@ -103,9 +99,10 @@ func (j *jobs) NotifyUser(user *rdb.User, apiSlack *slack.Client) error {
 	return nil
 }
 
-func (j *jobs) NotifyGmail(gmail *rdb.Gmail, apiSlack *slack.Client) error {
+// NotifyGmail -
+func NotifyGmail(gmail *rdb.Gmail, apiSlack *slack.Client) error {
 	// check email is working in job
-	j.StopNotifyGmail(gmail)
+	StopNotifyGmail(gmail)
 
 	job, err := scheduler.Every(fetchTimes).Seconds().Run(func() {
 		notify(gmail, apiSlack)
@@ -115,12 +112,13 @@ func (j *jobs) NotifyGmail(gmail *rdb.Gmail, apiSlack *slack.Client) error {
 	}
 
 	// add job
-	(*j)[gmail.ID] = job
+	jobs[gmail.ID] = job
 
 	return nil
 }
 
-func (j *jobs) StopNotifyTeam(team *rdb.Team) error {
+// StopNotifyTeam -
+func StopNotifyTeam(team *rdb.Team) error {
 	userRepo := rdb.NewUserRepository(infra.RDB)
 	users, err := userRepo.FindAllByTeamID(team.TeamID)
 	if err != nil {
@@ -128,7 +126,7 @@ func (j *jobs) StopNotifyTeam(team *rdb.Team) error {
 	}
 
 	for _, user := range users {
-		err := j.StopNotifyUser(&user)
+		err := StopNotifyUser(&user)
 		if err != nil {
 			return errors.Wrap(err, "error while notify user")
 		}
@@ -136,7 +134,8 @@ func (j *jobs) StopNotifyTeam(team *rdb.Team) error {
 	return nil
 }
 
-func (j *jobs) StopNotifyUser(user *rdb.User) error {
+// StopNotifyUser -
+func StopNotifyUser(user *rdb.User) error {
 	gmailRepo := rdb.NewGmailRepository(infra.RDB)
 
 	gmails, err := gmailRepo.FindByUserID(user.UserID)
@@ -145,7 +144,7 @@ func (j *jobs) StopNotifyUser(user *rdb.User) error {
 	}
 
 	for _, gmail := range gmails {
-		err = j.StopNotifyGmail(&gmail)
+		err = StopNotifyGmail(&gmail)
 		if err != nil {
 			return errors.Wrap(err, "error while notify gmail")
 		}
@@ -153,10 +152,11 @@ func (j *jobs) StopNotifyUser(user *rdb.User) error {
 	return nil
 }
 
-func (j *jobs) StopNotifyGmail(gmail *rdb.Gmail) error {
-	if (*j)[gmail.ID] != nil {
+// StopNotifyGmail -
+func StopNotifyGmail(gmail *rdb.Gmail) error {
+	if jobs[gmail.ID] != nil {
 		infra.Sdebug("stopping notify for email ", gmail.ID)
-		curJob := (*j)[gmail.ID]
+		curJob := jobs[gmail.ID]
 		curJob.Quit <- true
 	}
 
@@ -164,6 +164,7 @@ func (j *jobs) StopNotifyGmail(gmail *rdb.Gmail) error {
 }
 
 func notify(gmail *rdb.Gmail, apiSlack *slack.Client) {
+	infra.Sdebug("Starting fetch GMAIL")
 	if gmail.NotifyChannelID == "" {
 		return
 	}
@@ -179,73 +180,24 @@ func notify(gmail *rdb.Gmail, apiSlack *slack.Client) {
 		return
 	}
 
-	msgRes, err := srv.Users.Messages.List("me").LabelIds(labelUnread).Do()
+	gw := newGGWorker(srv)
+	ms, err := gw.fetchUnread()
 	if err != nil {
-		infra.Swarn("have error while get gmail", err)
+		infra.Swarn(err, "have error while get messages")
 		return
 	}
 
-	var ids []string
-	for _, msg := range msgRes.Messages {
-		ids = append(ids, msg.Id)
-		infra.Sdebug(msg.Id)
-
-		msgDetails, err := srv.Users.Messages.Get("me", msg.Id).Do()
-		if err != nil {
-			infra.Swarn("can not get detail gmail", msg.Id)
-			return
-		}
-
-		// get data
-		var from, subject, cc, content string
-		for _, header := range msgDetails.Payload.Headers {
-			if header.Name == "From" {
-				from = header.Value
-			}
-
-			if header.Name == "Subject" {
-				subject = header.Value
-			}
-
-			if header.Name == "Cc" {
-				cc = header.Value
-			}
-		}
-
-		if msgDetails.Payload.MimeType == "text/plain" || msgDetails.Payload.MimeType == "multipart/alternative" {
-			for _, part := range msgDetails.Payload.Parts {
-				if part.MimeType == "text/plain" {
-					contentByte, err := base64.URLEncoding.DecodeString(part.Body.Data)
-					if err != nil {
-						infra.Swarn("can not decode message", err)
-						content = "can not parse message"
-					} else {
-						content = string(contentByte)
-					}
-				}
-			}
-		} else {
-			content = msgDetails.Snippet
-		}
-
-		_, err = apiSlack.UploadFile(slack.FileUploadParameters{
-			Filetype: "post",
-			Channels: []string{gmail.NotifyChannelID},
-			Content:  fmt.Sprintf("## FROM: %s\n## CC: %s\n\n%s", from, cc, content),
-			Filename: subject,
-		})
-		if err != nil {
-			infra.Swarn("have error while post message", err)
-			return
-		}
+	sw := newSlWorker(apiSlack)
+	err = sw.posts(ms.m, gmail.NotifyChannelID)
+	if err != nil {
+		infra.Swarn(err, "have error while post message to slack")
+		return
 	}
 
-	// Remove all UNREAD label
-	// err = srv.Users.Messages.BatchModify("me", &gm.BatchModifyMessagesRequest{
-	// 	Ids: ids,
-	// }).Do()
-	// if err != nil {
-	// 	infra.Sdebug("can not remove unread label ", ids, err)
-	// 	return
-	// }
+	err = gw.read(ms)
+	if err != nil {
+		infra.Swarn(err, "have error while remove unread label")
+		return
+	}
+	infra.Sdebug("Ending fetch GMAIL")
 }

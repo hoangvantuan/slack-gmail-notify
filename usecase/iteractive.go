@@ -106,7 +106,7 @@ func (i *iteractiveUsecaseImpl) NotifyChannel(ir *IteractiveRequestParams) error
 		return errors.Wrap(err, "error while init slack client")
 	}
 
-	err = worker.Jobs.NotifyGmail(gmail, slackAPI)
+	err = worker.NotifyGmail(gmail, slackAPI)
 	if err != nil {
 		return errors.Wrap(err, "error while notify gmail for new channel")
 	}
@@ -130,7 +130,7 @@ func (i *iteractiveUsecaseImpl) RemoveAccount(ir *IteractiveRequestParams) error
 	}
 
 	// Stop notify gmail
-	worker.Jobs.StopNotifyGmail(&rdb.Gmail{
+	worker.StopNotifyGmail(&rdb.Gmail{
 		ID: gmailID,
 	})
 
