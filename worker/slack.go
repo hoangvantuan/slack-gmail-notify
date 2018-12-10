@@ -26,7 +26,7 @@ func (n *slWorkerImpl) post(m *message, to string) error {
 	_, err := n.client.UploadFile(slack.FileUploadParameters{
 		Filetype: "post",
 		Channels: []string{to},
-		Content:  fmt.Sprintf("### FROM: %s\n### CC: %s\n\n%s", m.From, m.CC, m.Body),
+		Content:  fmt.Sprintf("### FROM: %s\n\n%s", m.From, m.Body),
 		Filename: m.Subject,
 	})
 	if err != nil {
