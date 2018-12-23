@@ -80,8 +80,6 @@ func (i *iteractiveUsecaseImpl) ListAccount(ir *IteractiveRequestParams) error {
 
 // TODO: need update worker
 func (i *iteractiveUsecaseImpl) NotifyChannel(ir *IteractiveRequestParams) error {
-	infra.Sdebug("notify account", ir)
-
 	gmailRepo := rdb.NewGmailRepository(infra.RDB)
 	gmailID, err := strconv.Atoi(ir.CallbackID)
 	if err != nil {
@@ -92,7 +90,6 @@ func (i *iteractiveUsecaseImpl) NotifyChannel(ir *IteractiveRequestParams) error
 	if err != nil {
 		return errors.Wrap(err, "can not fetch gmail")
 	}
-	infra.Sdebug(gmail)
 
 	gmail.NotifyChannelID = ir.Actions[0].SelectedOptions[0].Value
 
@@ -116,8 +113,6 @@ func (i *iteractiveUsecaseImpl) NotifyChannel(ir *IteractiveRequestParams) error
 
 // TODO: need remove worker
 func (i *iteractiveUsecaseImpl) RemoveAccount(ir *IteractiveRequestParams) error {
-	infra.Sdebug("remove account", ir)
-
 	gmailRepo := rdb.NewGmailRepository(infra.RDB)
 	gmailID, err := strconv.Atoi(ir.CallbackID)
 	if err != nil {
@@ -213,8 +208,6 @@ func listAccount(ir *IteractiveRequestParams, text string) (*slack.Msg, error) {
 			selectChannelBtn(email.NotifyChannelID),
 			removeBtn,
 		}
-
-		infra.Sdebug(at)
 
 		ats = append(ats, at)
 	}

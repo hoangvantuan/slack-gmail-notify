@@ -50,13 +50,8 @@ func NewGmailRepository(db *gorm.DB) GmailRepository {
 func (t *gmailRepositoryImpl) FindByID(id int) (*Gmail, error) {
 	gmail := &Gmail{}
 	result := t.db.First(gmail, id)
-
 	if result.Error != nil {
 		return nil, result.Error
-	}
-
-	if result.RecordNotFound() {
-		return nil, ErrRecordNotFound
 	}
 
 	return gmail, nil
@@ -69,7 +64,6 @@ func (t *gmailRepositoryImpl) Add(gmail *Gmail) (*Gmail, error) {
 	if result.Error != nil {
 		return nil, result.Error
 	}
-
 	if result.NewRecord(gmail) {
 		return nil, ErrCanNotCreateRecord
 	}
@@ -119,10 +113,6 @@ func (t *gmailRepositoryImpl) FindByEmail(email, userID string) (*Gmail, error) 
 		return nil, result.Error
 	}
 
-	if result.RecordNotFound() {
-		return nil, ErrRecordNotFound
-	}
-
 	return gmail, nil
 }
 
@@ -133,10 +123,6 @@ func (t *gmailRepositoryImpl) FindByUserID(userID string) ([]Gmail, error) {
 
 	if result.Error != nil {
 		return nil, result.Error
-	}
-
-	if result.RecordNotFound() {
-		return nil, ErrRecordNotFound
 	}
 
 	return gmails, nil

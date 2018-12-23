@@ -48,10 +48,6 @@ func (t *userRepositoryImpl) FindByID(id uint) (*User, error) {
 		return nil, result.Error
 	}
 
-	if result.RecordNotFound() {
-		return nil, ErrRecordNotFound
-	}
-
 	return user, nil
 }
 

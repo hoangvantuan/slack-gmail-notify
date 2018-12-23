@@ -3,10 +3,8 @@ package handler
 import (
 	"net/http"
 
-	"github.com/mdshun/slack-gmail-notify/usecase"
-
 	"github.com/labstack/echo"
-	"github.com/mdshun/slack-gmail-notify/infra"
+	"github.com/mdshun/slack-gmail-notify/usecase"
 )
 
 type commandHandler struct{}
@@ -22,16 +20,13 @@ func (e *commandHandler) handler(ctx echo.Context) error {
 	rp := &usecase.CommandRequestParams{}
 
 	if err := ctx.Bind(rp); err != nil {
-		infra.Swarn("error can not bind parameter", err)
 		return ctx.NoContent(http.StatusOK)
 	}
 
 	uc := usecase.NewCommandUsecase()
 
 	err := uc.MainMenu(rp)
-
 	if err != nil {
-		infra.Swarn("error while handler command", err)
 		return ctx.NoContent(http.StatusOK)
 	}
 

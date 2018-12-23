@@ -28,14 +28,10 @@ func (e environment) String() string {
 // Setup prepares database connection and parameters for running application.
 func Setup() {
 	if RDB != nil {
-		Linfo("Infra already setup!")
 		return
 	}
 
 	setupLogger()
-
-	Sinfo("Environment is ", getEnvironment())
-
 	setupEnv()
 	setupDatabase()
 }

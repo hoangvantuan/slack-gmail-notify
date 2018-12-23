@@ -51,10 +51,6 @@ func (t *teamRepositoryImpl) FindByTeamID(teamID string) (*Team, error) {
 		return nil, result.Error
 	}
 
-	if result.RecordNotFound() {
-		return nil, ErrRecordNotFound
-	}
-
 	return team, nil
 }
 

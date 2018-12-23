@@ -6,11 +6,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/mdshun/slack-gmail-notify/usecase"
-
-	"github.com/mdshun/slack-gmail-notify/infra"
-
 	"github.com/labstack/echo"
+	"github.com/mdshun/slack-gmail-notify/usecase"
 	"github.com/nlopes/slack/slackevents"
 )
 
@@ -38,7 +35,6 @@ func (e *eventHandler) handler(ctx echo.Context) error {
 	var bodyBytes []byte
 	if ctx.Request().Body != nil {
 		bodyBytes, _ = ioutil.ReadAll(ctx.Request().Body)
-
 		// Restore the io.ReadCloser to its original state
 		ctx.Request().Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
 	}
@@ -51,7 +47,6 @@ func (e *eventHandler) handler(ctx echo.Context) error {
 
 	eventAPI, err := slackevents.ParseEvent(json.RawMessage(bodyBytes), optionNoVerifyToken)
 	if err != nil {
-		infra.Swarn("has error while parse event request ", err)
 		return ctx.NoContent(http.StatusOK)
 	}
 
@@ -62,7 +57,6 @@ func (e *eventHandler) handler(ctx echo.Context) error {
 
 	if eventAPI.Type == slackevents.CallbackEvent {
 		innerEvent := eventAPI.InnerEvent
-
 		switch innerEvent.Data.(type) {
 		// handler app uninstall event
 		case *slackevents.AppUninstalledEvent:
@@ -77,7 +71,6 @@ func verificationEventHandler(ctx echo.Context) error {
 	vr := &verificationRequestParam{}
 
 	if err := ctx.Bind(vr); err != nil {
-		infra.Swarn("can not binding challenge request ", err)
 		return ctx.NoContent(http.StatusOK)
 	}
 
@@ -90,9 +83,7 @@ func appUninstall(ctx echo.Context, teamID string) error {
 	uc := usecase.NewEventUsecase()
 
 	err := uc.UninstallApp(teamID)
-
 	if err != nil {
-		infra.Swarn("can not uninstall app", err)
 		return ctx.NoContent(http.StatusOK)
 	}
 

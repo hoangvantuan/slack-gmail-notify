@@ -155,7 +155,6 @@ func StopNotifyUser(user *rdb.User) error {
 // StopNotifyGmail -
 func StopNotifyGmail(gmail *rdb.Gmail) error {
 	if jobs[gmail.ID] != nil {
-		infra.Sdebug("stopping notify for email ", gmail.ID)
 		curJob := jobs[gmail.ID]
 		curJob.Quit <- true
 	}
@@ -164,7 +163,6 @@ func StopNotifyGmail(gmail *rdb.Gmail) error {
 }
 
 func notify(gmail *rdb.Gmail, apiSlack *slack.Client) {
-	infra.Sdebug("Starting fetch GMAIL")
 	if gmail.NotifyChannelID == "" {
 		return
 	}
@@ -176,28 +174,23 @@ func notify(gmail *rdb.Gmail, apiSlack *slack.Client) {
 		Expiry:       gmail.ExpiryDate,
 	})
 	if err != nil {
-		infra.Swarn(err, "have error while creare gmail service")
 		return
 	}
 
 	gw := newGGWorker(srv)
 	ms, err := gw.fetchUnread()
 	if err != nil {
-		infra.Swarn(err, "have error while get messages")
 		return
 	}
 
 	sw := newSlWorker(apiSlack)
 	err = sw.posts(ms.m, gmail.NotifyChannelID)
 	if err != nil {
-		infra.Swarn(err, "have error while post message to slack")
 		return
 	}
 
 	err = gw.read(ms)
 	if err != nil {
-		infra.Swarn(err, "have error while remove unread label")
 		return
 	}
-	infra.Sdebug("Ending fetch GMAIL")
 }

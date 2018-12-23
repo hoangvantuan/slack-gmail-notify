@@ -48,8 +48,6 @@ func (c *commandUsecaseImpl) MainMenu(rp *CommandRequestParams) error {
 		return errors.Wrap(err, "have error while decode json")
 	}
 
-	infra.Sdebug(string(msgatstr))
-
 	_, err = http.Post(rp.ResponseURL, "application/json", bytes.NewReader(msgatstr))
 	if err != nil {
 		return errors.Wrap(err, "have error while post message")

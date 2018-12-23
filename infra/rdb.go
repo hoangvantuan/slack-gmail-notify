@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/jinzhu/gorm"
-
 	// Just import.
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
@@ -38,19 +37,19 @@ func setupDatabase() {
 	// Determine base config per env.
 	dbc := dbConfigs[getEnvironment()]
 
-	Linfo("Get RDS username & password from env...")
+	Info("Get RDS username & password from env...")
 	dbc.Username = Env.MysqlUser
 	dbc.Password = Env.MysqlPass
 
-	Linfo("Get MYSQL endpoint...")
+	Info("Get MYSQL endpoint...")
 
 	dbc.Endpoint = Env.MysqlEndpoint
 
 	if dbc.Endpoint == "" {
-		Lpanic("db endpoint not found on environment variable and config")
+		Fatal("db endpoint not found on environment variable and config")
 	}
 
-	Linfo("Connect database...")
+	Info("Connect database...")
 	connectToDatabase(
 		fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True&loc=Local",
 			dbc.Username, dbc.Password, dbc.Endpoint, dbc.Database),
@@ -60,7 +59,7 @@ func setupDatabase() {
 func connectToDatabase(dns string) {
 	db, err := gorm.Open("mysql", dns)
 	if err != nil {
-		Lpanic(fmt.Sprintf("%s", err))
+		Fatal(fmt.Sprintf("%s", err))
 	}
 
 	db.LogMode(!IsProduction())

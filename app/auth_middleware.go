@@ -49,14 +49,12 @@ func validateSlackReq(header http.Header, body []byte) error {
 	sv, err := slack.NewSecretsVerifier(header, infra.Env.SlackSignSecret)
 
 	if err != nil {
-		infra.Swarn(errCanNotVerifyRequest, err)
 		return errors.Wrap(err, errCanNotVerifyRequest)
 	}
 
 	sv.Write(body)
 
 	if err := sv.Ensure(); err != nil {
-		infra.Swarn(errCanNotVerifyRequest, err)
 		return errors.Wrap(err, errCanNotVerifyRequest)
 	}
 

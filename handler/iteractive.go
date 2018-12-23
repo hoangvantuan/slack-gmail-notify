@@ -4,12 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/nlopes/slack"
-
-	"github.com/mdshun/slack-gmail-notify/usecase"
-
 	"github.com/labstack/echo"
-	"github.com/mdshun/slack-gmail-notify/infra"
+	"github.com/mdshun/slack-gmail-notify/usecase"
+	"github.com/nlopes/slack"
 )
 
 type iteractiveHandler struct{}
@@ -26,14 +23,9 @@ func (e *iteractiveHandler) handler(ctx echo.Context) error {
 
 	payload := ctx.FormValue("payload")
 
-	infra.Sdebug("payload ", payload)
-
 	if err := json.Unmarshal([]byte(payload), rp); err != nil {
-		infra.Swarn("error can not bind parameter", err)
 		return ctx.NoContent(http.StatusOK)
 	}
-
-	infra.Sdebug("payload: ", rp)
 
 	// Close button
 	if rp.Actions[0].Name == "close" {
@@ -49,7 +41,6 @@ func (e *iteractiveHandler) handler(ctx echo.Context) error {
 	if rp.Actions[0].Name == "list-gmail" {
 		err := uc.ListAccount(rp)
 		if err != nil {
-			infra.Swarn("error while get list account", err)
 			return ctx.NoContent(http.StatusOK)
 		}
 	}
@@ -57,7 +48,6 @@ func (e *iteractiveHandler) handler(ctx echo.Context) error {
 	if rp.Actions[0].Name == "notify-channel" {
 		err := uc.NotifyChannel(rp)
 		if err != nil {
-			infra.Swarn("error while update notify channel", err)
 			return ctx.NoContent(http.StatusOK)
 		}
 	}
@@ -65,7 +55,6 @@ func (e *iteractiveHandler) handler(ctx echo.Context) error {
 	if rp.Actions[0].Name == "remove-gmail" {
 		err := uc.RemoveAccount(rp)
 		if err != nil {
-			infra.Swarn("error while remove account", err)
 			return ctx.NoContent(http.StatusOK)
 		}
 	}

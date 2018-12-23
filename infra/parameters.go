@@ -22,7 +22,7 @@ type envConfig struct {
 	SlackClientSecret   string   `env:"SLACK_CLIENT_SECRET"`
 	SlackSignSecret     string   `env:"SLACK_SIGN_SECRET"`
 	SlackRedirectedURL  string   `env:"SLACK_REDIRECTED_URL"`
-	SlackScope          string   `env:"SLACK_SCOPES"`
+	SlackScope          []string `env:"SLACK_SCOPES"`
 	APIHost             string   `env:"API_HOST"`
 	GoogleClientID      string   `env:"GOOGLE_CLIENT_ID"`
 	GoogleClientSecret  string   `env:"GOOGLE_CLIENT_SECRET"`
@@ -32,27 +32,31 @@ type envConfig struct {
 	GoogleRedirectedURL string   `env:"GOOGLE_REDIRECTED_URL"`
 }
 
+var repoPath = os.Getenv("GOPATH") + "src/github.com/mdshun/slack-gmail-notify"
+
+const envExt = ".env"
+
 func setupEnv() {
 	loadEnv()
 	parseEnv()
 }
 
 func loadEnv() {
-	envFileName := fmt.Sprintf(".env.%s", getEnvironment())
-	rootPath := filepath.Join(os.Getenv("GOPATH"), "src/github.com/mdshun/slack-gmail-notify", envFileName)
+	rootPath := filepath.Join(repoPath, envFileName())
 	err := godotenv.Load(rootPath)
-
 	if err != nil {
-		Swarn("loading .env.%s file\n%s", getEnvironment(), err)
+		Fatal("loading env file error", err)
 	}
 }
 
 func parseEnv() {
 	Env = &envConfig{}
-
 	err := env.Parse(Env)
-
 	if err != nil {
-		Swarn("parse envs to struct\n%s", err)
+		Fatal("parse env file error", err)
 	}
+}
+
+func envFileName() string {
+	return fmt.Sprintf(".%s.%s", envExt, getEnvironment())
 }

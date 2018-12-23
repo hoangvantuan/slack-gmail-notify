@@ -41,8 +41,6 @@ func (a *authUsecaseImpl) SlackAuth(ri *AuthRequestInput) error {
 
 	team := &rdb.Team{}
 
-	infra.Sdebug("auth new team ", or)
-
 	// encode token
 	or.AccessToken, err = util.Encrypt(or.AccessToken, infra.Env.EncryptKey)
 	or.Bot.BotAccessToken, err = util.Encrypt(or.Bot.BotAccessToken, infra.Env.EncryptKey)
@@ -59,8 +57,6 @@ func (a *authUsecaseImpl) SlackAuth(ri *AuthRequestInput) error {
 	team.BotAccessToken = or.Bot.BotAccessToken
 	team.BotUserID = or.Bot.BotUserID
 
-	infra.Sdebug("save team info ", team)
-
 	teamRepo := rdb.NewTeamRepository(tx)
 
 	// check team was installed
@@ -76,8 +72,6 @@ func (a *authUsecaseImpl) SlackAuth(ri *AuthRequestInput) error {
 		user := &rdb.User{}
 		user.UserID = team.UserID
 		user.TeamID = team.TeamID
-
-		infra.Sdebug("save user info ", user)
 
 		userRepo := rdb.NewUserRepository(tx)
 
@@ -99,7 +93,6 @@ func (a *authUsecaseImpl) SlackAuth(ri *AuthRequestInput) error {
 		oldteam.BotUserID = or.Bot.BotUserID
 
 		_, err = teamRepo.Update(oldteam)
-
 		if err != nil {
 			return errors.Wrap(err, "have error while save team")
 		}
@@ -127,8 +120,6 @@ func (a *authUsecaseImpl) GoogleAuth(ri *AuthRequestInput, rp *CommandRequestPar
 	if err != nil {
 		return errors.Wrap(err, "have error while get google token")
 	}
-
-	infra.Sdebug("get token google ", token)
 
 	// get gmail
 	client := conf.Client(ctx, token)
@@ -165,9 +156,6 @@ func (a *authUsecaseImpl) GoogleAuth(ri *AuthRequestInput, rp *CommandRequestPar
 
 	// check email was added
 	oldgmail, err := gmailRepo.FindByEmail(profile.EmailAddress, rp.UserID)
-
-	infra.Sdebug("old email ", oldgmail)
-
 	if err != nil {
 		_, err = gmailRepo.Add(mygmail)
 		if err != nil {
