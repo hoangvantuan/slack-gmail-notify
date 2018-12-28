@@ -6,6 +6,8 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+
+	"github.com/mdshun/slack-gmail-notify/infra"
 )
 
 func createHash(key string) string {
@@ -15,8 +17,8 @@ func createHash(key string) string {
 }
 
 // Encrypt is encrypt
-func Encrypt(data string, privateKey string) (string, error) {
-	hashed := createHash(privateKey)
+func Encrypt(data string) (string, error) {
+	hashed := createHash(infra.Env.EncryptKey)
 
 	block, _ := aes.NewCipher([]byte(hashed))
 	gcm, err := cipher.NewGCM(block)
@@ -32,8 +34,8 @@ func Encrypt(data string, privateKey string) (string, error) {
 }
 
 // Decrypt is decrypt string with
-func Decrypt(data string, privateKey string) (string, error) {
-	hashed := createHash(privateKey)
+func Decrypt(data string) (string, error) {
+	hashed := createHash(infra.Env.EncryptKey)
 	key := []byte(hashed)
 
 	block, err := aes.NewCipher(key)

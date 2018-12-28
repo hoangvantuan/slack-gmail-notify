@@ -54,19 +54,16 @@ func (a *authHandler) slackAuth(ctx echo.Context) error {
 		err = ctx.Validate(rp)
 	}
 	if err != nil {
-		return ctx.String(http.StatusBadRequest, "error parameter is invalid")
+		return ctx.String(http.StatusBadRequest, err.Error())
 	}
 
 	uc := usecase.NewAuthUsecase()
-
-	ri := &usecase.AuthRequestInput{
+	err = uc.SlackAuth(&usecase.AuthRequestInput{
 		Code:  rp.Code,
 		State: rp.State,
-	}
-
-	err = uc.SlackAuth(ri)
+	})
 	if err != nil {
-		return ctx.String(http.StatusInternalServerError, "error while save database")
+		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
 	return ctx.String(http.StatusOK, "thanks you for install app")
@@ -80,7 +77,7 @@ func (a *authHandler) googleAuth(ctx echo.Context) error {
 	secretInfo := &usecase.CommandRequestParams{}
 	err := json.Unmarshal([]byte(decodedState), secretInfo)
 	if err != nil {
-		return ctx.String(http.StatusBadRequest, "error parameter is invalid")
+		return ctx.String(http.StatusBadRequest, err.Error())
 	}
 	err = ctx.Bind(rp)
 	if err == nil {
@@ -88,20 +85,17 @@ func (a *authHandler) googleAuth(ctx echo.Context) error {
 		err = ctx.Validate(secretInfo)
 	}
 	if err != nil {
-		return ctx.String(http.StatusBadRequest, "error parameter is invalid")
+		return ctx.String(http.StatusBadRequest, err.Error())
 	}
 
 	uc := usecase.NewAuthUsecase()
-
-	ri := &usecase.AuthRequestInput{
+	err = uc.GoogleAuth(&usecase.AuthRequestInput{
 		Code:  rp.Code,
 		State: rp.State,
-	}
-
-	err = uc.GoogleAuth(ri, secretInfo)
+	}, secretInfo)
 	if err != nil {
-		return ctx.String(http.StatusInternalServerError, "error while save database")
+		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
-	return ctx.String(http.StatusOK, "thank you, add gmail account successfull!")
+	return ctx.String(http.StatusOK, "thanks you, register gmail account successfull!")
 }

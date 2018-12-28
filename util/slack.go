@@ -16,7 +16,7 @@ func SlackAPI(teamID string) (*slack.Client, error) {
 		return nil, errors.Wrap(err, "have error while find team")
 	}
 
-	token, err := Decrypt(team.BotAccessToken, infra.Env.EncryptKey)
+	token, err := Decrypt(team.BotAccessToken)
 	if err != nil {
 		return nil, errors.Wrap(err, "error while decrypt token")
 	}

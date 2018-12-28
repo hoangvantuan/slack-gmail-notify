@@ -22,10 +22,9 @@ type Team struct {
 // TeamRepository is defind interface for team
 type TeamRepository interface {
 	FindByTeamID(teamID string) (*Team, error)
-	Add(team *Team) (*Team, error)
 	DeleteByTeamID(teamID string) error
-	Update(team *Team) (*Team, error)
-	FindAllTeam() ([]Team, error)
+	FindAllTeam() ([]*Team, error)
+	Save(team *Team) error
 }
 
 type teamRepositoryImpl struct {
@@ -54,52 +53,24 @@ func (t *teamRepositoryImpl) FindByTeamID(teamID string) (*Team, error) {
 	return team, nil
 }
 
-// Add is add team record
-func (t *teamRepositoryImpl) Add(team *Team) (*Team, error) {
-	result := t.db.Create(team)
-
-	if result.Error != nil {
-		return nil, result.Error
-	}
-
-	if result.NewRecord(team) {
-		return nil, ErrCanNotCreateRecord
-	}
-
-	return team, nil
-}
-
 // DeleteByTeamID is delete team by id
 func (t *teamRepositoryImpl) DeleteByTeamID(teamID string) error {
-	result := t.db.Where("team_id = ?", teamID).Delete(Team{})
-
-	if result.Error != nil {
-		return result.Error
-	}
-
-	return nil
-}
-
-// Update team
-func (t *teamRepositoryImpl) Update(team *Team) (*Team, error) {
-	result := t.db.Save(team)
-
-	if result.Error != nil {
-		return nil, result.Error
-	}
-
-	return team, nil
+	return t.db.Where("team_id = ?", teamID).Delete(Team{}).Error
 }
 
 // FindAllTeam return all team info
-func (t *teamRepositoryImpl) FindAllTeam() ([]Team, error) {
-	teams := []Team{}
+func (t *teamRepositoryImpl) FindAllTeam() ([]*Team, error) {
+	teams := []*Team{}
 
 	result := t.db.Find(&teams)
-
 	if result.Error != nil {
 		return nil, result.Error
 	}
 
 	return teams, nil
+}
+
+// Save will save or update team
+func (t *teamRepositoryImpl) Save(team *Team) error {
+	return t.db.Save(team).Error
 }

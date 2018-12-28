@@ -23,8 +23,8 @@ func GmailSrv(token *oauth2.Token) (*gm.Service, error) {
 		},
 	}
 
-	accessToken, _ := Decrypt(token.AccessToken, infra.Env.EncryptKey)
-	refreshToken, _ := Decrypt(token.RefreshToken, infra.Env.EncryptKey)
+	accessToken, _ := Decrypt(token.AccessToken)
+	refreshToken, _ := Decrypt(token.RefreshToken)
 
 	// get gmail
 	client := conf.Client(context.Background(), &oauth2.Token{

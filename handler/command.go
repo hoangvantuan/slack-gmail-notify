@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo"
+	"github.com/mdshun/slack-gmail-notify/infra"
 	"github.com/mdshun/slack-gmail-notify/usecase"
 )
 
@@ -16,20 +17,25 @@ func BindCommandHandler(e *echo.Echo) {
 	e.POST("/v1/slack/command", h.handler)
 }
 
-func (e *commandHandler) handler(ctx echo.Context) error {
+func (e *commandHandler) handler(ctx echo.Context) (err error) {
+	// always return 200 status
+	defer func() {
+		err = ctx.NoContent(http.StatusOK)
+	}()
+
 	rp := &usecase.CommandRequestParams{}
 
-	if err := ctx.Bind(rp); err != nil {
-		return ctx.NoContent(http.StatusOK)
+	if err = ctx.Bind(rp); err != nil {
+		infra.Warn(err)
+		return
 	}
 
 	uc := usecase.NewCommandUsecase()
-
-	err := uc.MainMenu(rp)
+	err = uc.GetMainMenu(rp)
 	if err != nil {
-		return ctx.NoContent(http.StatusOK)
+		infra.Warn(err)
+		return
 	}
 
-	return ctx.NoContent(http.StatusOK)
-
+	return
 }

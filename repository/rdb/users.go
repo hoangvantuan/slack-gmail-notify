@@ -59,10 +59,6 @@ func (t *userRepositoryImpl) Add(user *User) (*User, error) {
 		return nil, result.Error
 	}
 
-	if result.NewRecord(user) {
-		return nil, ErrCanNotCreateRecord
-	}
-
 	return user, nil
 }
 

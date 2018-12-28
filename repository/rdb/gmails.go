@@ -8,9 +8,8 @@ import (
 
 // Gmail is gmails table
 type Gmail struct {
-	ID              int       `gorm:"primary_key"`
+	Email           string    `gorm:"primary_key"`
 	UserID          string    `gorm:"not null"`
-	Email           string    `gorm:"not null"`
 	AccessToken     string    `gorm:"not null;size:1000"`
 	RefreshToken    string    `gorm:"not null;size:1000"`
 	TokenType       string    `gorm:"not null"`
@@ -23,13 +22,11 @@ type Gmail struct {
 
 // GmailRepository is defind interface for team
 type GmailRepository interface {
-	FindByID(id int) (*Gmail, error)
-	Add(gmail *Gmail) (*Gmail, error)
-	DeleteByID(id int) error
-	Update(gmail *Gmail) (*Gmail, error)
+	DeleteByEmail(email string) error
 	DeleteAllByUserID(userID string) error
-	FindByEmail(email, userID string) (*Gmail, error)
-	FindByUserID(userID string) ([]Gmail, error)
+	FindByEmail(email string) (*Gmail, error)
+	FindByUserID(userID string) ([]*Gmail, error)
+	Save(gmail *Gmail) error
 }
 
 type gmailRepositoryImpl struct {
@@ -46,51 +43,20 @@ func NewGmailRepository(db *gorm.DB) GmailRepository {
 	return &gmailRepositoryImpl{db}
 }
 
-// FindByID will find gmail by id
-func (t *gmailRepositoryImpl) FindByID(id int) (*Gmail, error) {
+// FindByEmail will find gmail by id
+func (t *gmailRepositoryImpl) FindByEmail(email string) (*Gmail, error) {
 	gmail := &Gmail{}
-	result := t.db.First(gmail, id)
+	result := t.db.First(gmail, email)
 	if result.Error != nil {
 		return nil, result.Error
-	}
-
-	return gmail, nil
-}
-
-// Add is add gmail record
-func (t *gmailRepositoryImpl) Add(gmail *Gmail) (*Gmail, error) {
-	result := t.db.Create(gmail)
-
-	if result.Error != nil {
-		return nil, result.Error
-	}
-	if result.NewRecord(gmail) {
-		return nil, ErrCanNotCreateRecord
 	}
 
 	return gmail, nil
 }
 
 // DeleteByID is delete gmail by id
-func (t *gmailRepositoryImpl) DeleteByID(id int) error {
-	result := t.db.Where("id = ?", id).Delete(Gmail{})
-
-	if result.Error != nil {
-		return result.Error
-	}
-
-	return nil
-}
-
-// Update gmail
-func (t *gmailRepositoryImpl) Update(gmail *Gmail) (*Gmail, error) {
-	result := t.db.Save(gmail)
-
-	if result.Error != nil {
-		return nil, result.Error
-	}
-
-	return gmail, nil
+func (t *gmailRepositoryImpl) DeleteByEmail(email string) error {
+	return t.db.Where("email = ?", email).Delete(Gmail{}).Error
 }
 
 // DeleteAllByUserID delete all user by user id
@@ -104,21 +70,9 @@ func (t *gmailRepositoryImpl) DeleteAllByUserID(userID string) error {
 	return nil
 }
 
-// FindByEmail will find gmail by id
-func (t *gmailRepositoryImpl) FindByEmail(email, userID string) (*Gmail, error) {
-	gmail := &Gmail{}
-	result := t.db.Where("email = ? AND user_id = ?", email, userID).First(gmail)
-
-	if result.Error != nil {
-		return nil, result.Error
-	}
-
-	return gmail, nil
-}
-
 // FindByUserID will find gmail by id
-func (t *gmailRepositoryImpl) FindByUserID(userID string) ([]Gmail, error) {
-	gmails := []Gmail{}
+func (t *gmailRepositoryImpl) FindByUserID(userID string) ([]*Gmail, error) {
+	gmails := []*Gmail{}
 	result := t.db.Where("user_id = ?", userID).Find(&gmails)
 
 	if result.Error != nil {
@@ -126,4 +80,9 @@ func (t *gmailRepositoryImpl) FindByUserID(userID string) ([]Gmail, error) {
 	}
 
 	return gmails, nil
+}
+
+// Save -
+func (t *gmailRepositoryImpl) Save(gmail *Gmail) error {
+	return t.db.Save(gmail).Error
 }
