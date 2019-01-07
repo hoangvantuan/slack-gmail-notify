@@ -8,21 +8,18 @@ import (
 
 // User is users table
 type User struct {
-	ID        uint   `gorm:"primary_key"`
-	UserID    string `gorm:"not null"`
-	TeamID    string `gorm:"not null"`
+	UserID    string `gorm:"primary_key"`
+	TeamID    string `gorm:"primary_key"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
 
 // UserRepository is defind interface for team
 type UserRepository interface {
-	FindByID(id uint) (*User, error)
-	Add(user *User) (*User, error)
-	DeleteByID(id uint) error
-	Update(user *User) (*User, error)
-	FindAllByTeamID(teamID string) ([]User, error)
-	DeleteAllByTeamID(teamID string) error
+	FindByID(uid, tid string) (*User, error)
+	FindByTeamID(teamID string) ([]User, error)
+	DeleteByTeamID(teamID string) error
+	Save(user *User) error
 }
 
 type userRepositoryImpl struct {
@@ -40,9 +37,9 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 }
 
 // FindByID will find user by id
-func (t *userRepositoryImpl) FindByID(id uint) (*User, error) {
+func (t *userRepositoryImpl) FindByID(uid, tid string) (*User, error) {
 	user := &User{}
-	result := t.db.First(user, id)
+	result := t.db.Where("user_id = ? AND team_id = ?", uid, tid).First(user)
 
 	if result.Error != nil {
 		return nil, result.Error
@@ -51,41 +48,8 @@ func (t *userRepositoryImpl) FindByID(id uint) (*User, error) {
 	return user, nil
 }
 
-// Add is add user record
-func (t *userRepositoryImpl) Add(user *User) (*User, error) {
-	result := t.db.Create(user)
-
-	if result.Error != nil {
-		return nil, result.Error
-	}
-
-	return user, nil
-}
-
-// DeleteByID is delete user by id
-func (t *userRepositoryImpl) DeleteByID(id uint) error {
-	result := t.db.Where("id = ?", id).Delete(User{})
-
-	if result.Error != nil {
-		return result.Error
-	}
-
-	return nil
-}
-
-// Update user
-func (t *userRepositoryImpl) Update(user *User) (*User, error) {
-	result := t.db.Save(user)
-
-	if result.Error != nil {
-		return nil, result.Error
-	}
-
-	return user, nil
-}
-
-// FindAllByTeamID return all user with team id
-func (t *userRepositoryImpl) FindAllByTeamID(teamID string) ([]User, error) {
+// FindByTeamID return all user with team id
+func (t *userRepositoryImpl) FindByTeamID(teamID string) ([]User, error) {
 	users := []User{}
 
 	result := t.db.Where("team_id = ?", teamID).Find(&users)
@@ -97,8 +61,8 @@ func (t *userRepositoryImpl) FindAllByTeamID(teamID string) ([]User, error) {
 	return users, nil
 }
 
-// DeleteAllByTeamID delete all user by teamid
-func (t *userRepositoryImpl) DeleteAllByTeamID(teamID string) error {
+// DeleteByTeamID delete all user by teamid
+func (t *userRepositoryImpl) DeleteByTeamID(teamID string) error {
 	result := t.db.Where("team_id = ?", teamID).Delete(User{})
 
 	if result.Error != nil {
@@ -106,4 +70,9 @@ func (t *userRepositoryImpl) DeleteAllByTeamID(teamID string) error {
 	}
 
 	return nil
+}
+
+// Save user
+func (t *userRepositoryImpl) Save(user *User) error {
+	return t.db.Save(user).Error
 }

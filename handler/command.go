@@ -3,6 +3,8 @@ package handler
 import (
 	"net/http"
 
+	"github.com/nlopes/slack"
+
 	"github.com/labstack/echo"
 	"github.com/mdshun/slack-gmail-notify/infra"
 	"github.com/mdshun/slack-gmail-notify/usecase"
@@ -23,7 +25,7 @@ func (e *commandHandler) handler(ctx echo.Context) (err error) {
 		err = ctx.NoContent(http.StatusOK)
 	}()
 
-	rp := &usecase.CommandRequestParams{}
+	rp := &slack.SlashCommand{}
 
 	if err = ctx.Bind(rp); err != nil {
 		infra.Warn(err)

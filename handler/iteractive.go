@@ -39,14 +39,14 @@ func (e *iteractiveHandler) handler(ctx echo.Context) error {
 	uc := usecase.NewIteractiveUsecase()
 
 	if rp.Actions[0].Name == "list-gmail" {
-		err := uc.ListAccount(rp)
+		err := uc.ListAllAccount(rp)
 		if err != nil {
 			return ctx.NoContent(http.StatusOK)
 		}
 	}
 
 	if rp.Actions[0].Name == "notify-channel" {
-		err := uc.NotifyChannel(rp)
+		err := uc.NotifyToChannel(rp)
 		if err != nil {
 			return ctx.NoContent(http.StatusOK)
 		}

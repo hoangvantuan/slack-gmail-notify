@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/nlopes/slack"
+
 	"github.com/labstack/echo"
 	"github.com/mdshun/slack-gmail-notify/infra"
 	"github.com/mdshun/slack-gmail-notify/usecase"
@@ -58,7 +60,7 @@ func (a *authHandler) slackAuth(ctx echo.Context) error {
 	}
 
 	uc := usecase.NewAuthUsecase()
-	err = uc.SlackAuth(&usecase.AuthRequestInput{
+	err = uc.AuthSlack(&usecase.AuthRequestInput{
 		Code:  rp.Code,
 		State: rp.State,
 	})
@@ -73,8 +75,8 @@ func (a *authHandler) googleAuth(ctx echo.Context) error {
 	rp := &authRequestParams{}
 
 	state := ctx.QueryParam("state")
-	decodedState, _ := util.Decrypt(state, infra.Env.EncryptKey)
-	secretInfo := &usecase.CommandRequestParams{}
+	decodedState, _ := util.Decrypt(state)
+	secretInfo := &slack.SlashCommand{}
 	err := json.Unmarshal([]byte(decodedState), secretInfo)
 	if err != nil {
 		return ctx.String(http.StatusBadRequest, err.Error())
@@ -89,7 +91,7 @@ func (a *authHandler) googleAuth(ctx echo.Context) error {
 	}
 
 	uc := usecase.NewAuthUsecase()
-	err = uc.GoogleAuth(&usecase.AuthRequestInput{
+	err = uc.AuthGoogle(&usecase.AuthRequestInput{
 		Code:  rp.Code,
 		State: rp.State,
 	}, secretInfo)

@@ -4,14 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
-	"strconv"
 
 	"github.com/mdshun/slack-gmail-notify/infra"
 	"github.com/mdshun/slack-gmail-notify/repository/rdb"
 	"github.com/mdshun/slack-gmail-notify/util"
 	"github.com/mdshun/slack-gmail-notify/worker"
 	"github.com/nlopes/slack"
-	"github.com/pkg/errors"
 )
 
 // IteractiveRequestParams is request from command
@@ -49,8 +47,8 @@ type iteractiveUsecaseImpl struct{}
 
 // IteractiveUsecase is event interface
 type IteractiveUsecase interface {
-	ListAccount(ir *IteractiveRequestParams) error
-	NotifyChannel(ir *IteractiveRequestParams) error
+	ListAllAccount(ir *IteractiveRequestParams) error
+	NotifyToChannel(ir *IteractiveRequestParams) error
 	RemoveAccount(ir *IteractiveRequestParams) error
 }
 
@@ -59,89 +57,80 @@ func NewIteractiveUsecase() IteractiveUsecase {
 	return &iteractiveUsecaseImpl{}
 }
 
-func (i *iteractiveUsecaseImpl) ListAccount(ir *IteractiveRequestParams) error {
+func (i *iteractiveUsecaseImpl) ListAllAccount(ir *IteractiveRequestParams) error {
 	msg, err := listAccount(ir, "List gmail account you already registered")
 	if err != nil {
-		return errors.Wrap(err, "have error while get list acocunt")
+		return err
 	}
 
 	msgjson, err := json.Marshal(msg)
 	if err != nil {
-		return errors.Wrap(err, "have error while marshal json")
+		return err
 	}
 
 	_, err = http.Post(ir.ResponseURL, "application/json", bytes.NewReader(msgjson))
 	if err != nil {
-		return errors.Wrap(err, "have error while post message")
+		return err
 	}
 
 	return nil
 }
 
-// TODO: need update worker
-func (i *iteractiveUsecaseImpl) NotifyChannel(ir *IteractiveRequestParams) error {
+func (i *iteractiveUsecaseImpl) NotifyToChannel(ir *IteractiveRequestParams) error {
 	gmailRepo := rdb.NewGmailRepository(infra.RDB)
-	gmailID, err := strconv.Atoi(ir.CallbackID)
+	// CallbackID is email
+	gmail, err := gmailRepo.FindByEmail(ir.CallbackID)
 	if err != nil {
-		return errors.Wrap(err, "can not convert gmail id")
-	}
-
-	gmail, err := gmailRepo.FindByID(gmailID)
-	if err != nil {
-		return errors.Wrap(err, "can not fetch gmail")
+		return err
 	}
 
 	gmail.NotifyChannelID = ir.Actions[0].SelectedOptions[0].Value
 
-	_, err = gmailRepo.Update(gmail)
+	err = gmailRepo.Save(gmail)
 	if err != nil {
-		return errors.Wrap(err, "can not update gmail")
+		return err
 	}
 
-	slackAPI, err := util.SlackAPI(ir.Team.ID)
+	teamRepo := rdb.NewTeamRepository(infra.RDB)
+	team, err := teamRepo.FindByTeamID(ir.Team.ID)
 	if err != nil {
-		return errors.Wrap(err, "error while init slack client")
+		return err
 	}
 
-	err = worker.NotifyGmail(gmail, slackAPI)
+	slackAPI := slack.New(team.BotAccessToken)
+
+	err = worker.NotifyForGmail(gmail, slackAPI)
 	if err != nil {
-		return errors.Wrap(err, "error while notify gmail for new channel")
+		return err
 	}
 
 	return nil
 }
 
-// TODO: need remove worker
 func (i *iteractiveUsecaseImpl) RemoveAccount(ir *IteractiveRequestParams) error {
 	gmailRepo := rdb.NewGmailRepository(infra.RDB)
-	gmailID, err := strconv.Atoi(ir.CallbackID)
-	if err != nil {
-		return errors.Wrap(err, "can not convert gmail id")
-	}
 
-	err = gmailRepo.DeleteByID(gmailID)
+	err := gmailRepo.DeleteByEmail(ir.CallbackID)
 	if err != nil {
-		return errors.Wrap(err, "can not delete email with id")
+		return err
 	}
 
 	// Stop notify gmail
-	worker.StopNotifyGmail(&rdb.Gmail{
-		ID: gmailID,
-	})
+	worker.StopNotifyForGmail(ir.CallbackID)
 
 	msg, err := listAccount(ir, "List gmail account you already register")
 	if err != nil {
-		return errors.Wrap(err, "have error while get list acocunt")
+		return err
 	}
 
 	msgjson, err := json.Marshal(msg)
 	if err != nil {
-		return errors.Wrap(err, "have error while marshal json")
+		return err
 	}
 
 	_, err = http.Post(ir.ResponseURL, "application/json", bytes.NewReader(msgjson))
 	if err != nil {
-		return errors.Wrap(err, "have error while post message")
+		return err
 	}
 
 	return nil
@@ -149,14 +138,18 @@ func (i *iteractiveUsecaseImpl) RemoveAccount(ir *IteractiveRequestParams) error
 
 func listAccount(ir *IteractiveRequestParams, text string) (*slack.Msg, error) {
 	gmailRepo := rdb.NewGmailRepository(infra.RDB)
-	mails, err := gmailRepo.FindByUserID(ir.User.ID)
+	mails, err := gmailRepo.FindByUser(&rdb.User{
+		TeamID: ir.Team.ID,
+		UserID: ir.User.ID,
+	})
+
 	if err != nil {
 		// return empty dialog
-		return nil, errors.Wrap(err, "have error while get list gmail")
+		return nil, err
 	}
 
 	if len(mails) == 0 {
-		text = "You no have any gmail account, please add to start notify"
+		text = "You not have any gmail account, please add to start notify"
 	}
 
 	selectChannelBtn := func(value string) slack.AttachmentAction {
@@ -183,18 +176,16 @@ func listAccount(ir *IteractiveRequestParams, text string) (*slack.Msg, error) {
 			Type:  "button",
 		}
 
-	closeBtn := slack.AttachmentAction{
-		Name:  "close",
-		Text:  "Close",
-		Value: "close",
-		Style: "danger",
-		Type:  "button",
-	}
-
 	closeAt := slack.Attachment{
 		CallbackID: "close",
 		Actions: []slack.AttachmentAction{
-			closeBtn,
+			slack.AttachmentAction{
+				Name:  util.CloseName,
+				Text:  util.CloseText,
+				Value: util.CloseValue,
+				Style: util.CloseStyle,
+				Type:  util.CloseType,
+			},
 		},
 	}
 
@@ -203,7 +194,8 @@ func listAccount(ir *IteractiveRequestParams, text string) (*slack.Msg, error) {
 	for _, email := range mails {
 		at := slack.Attachment{}
 		at.Text = email.Email
-		at.CallbackID = strconv.Itoa(email.ID)
+		// callback_id is email
+		at.CallbackID = email.Email
 		at.Actions = []slack.AttachmentAction{
 			selectChannelBtn(email.NotifyChannelID),
 			removeBtn,

@@ -49,7 +49,6 @@ func genInteractiveMenu(rp *slack.SlashCommand, text string) (*slack.Msg, error)
 	if err != nil {
 		return nil, err
 	}
-
 	pjsoneconded, err := util.Encrypt(string(pjson))
 	if err != nil {
 		return nil, err

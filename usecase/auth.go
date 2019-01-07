@@ -1,6 +1,8 @@
 package usecase
 
 import (
+	"context"
+
 	"github.com/mdshun/slack-gmail-notify/infra"
 	"github.com/mdshun/slack-gmail-notify/repository/rdb"
 	"github.com/nlopes/slack"
@@ -35,34 +37,27 @@ func (a *authUsecaseImpl) AuthSlack(ri *AuthRequestInput) error {
 	}
 
 	// start transaction
-	tx := infra.RDB.Begin()
-	teamRepo := rdb.NewTeamRepository(tx)
-	err := teamRepo.Save(&rdb.Team{
+	teamRepo := rdb.NewTeamRepository(infra.RDB)
+	return teamRepo.Save(&rdb.Team{
+		TeamID:         or.TeamID,
 		AccessToken:    or.AccessToken,
 		Scope:          or.Scope,
 		TeamName:       or.TeamName,
-		TeamID:         or.TeamID,
 		UserID:         or.UserID,
 		BotAccessToken: or.Bot.BotAccessToken,
 		BotUserID:      or.Bot.BotUserID,
 	})
-	if err != inl {
-		tx.Rollback()
-		return err
-	}
-
-	tx.Commit()
-	return nil
 }
 
 func (a *authUsecaseImpl) AuthGoogle(ri *AuthRequestInput, rp *slack.SlashCommand) error {
-	token, err := infra.GoogleOauth2Config().Exchange(ri.Code)
+	ctx := context.Background()
+	token, err := infra.GoogleOauth2Config().Exchange(ctx, ri.Code)
 	if err != nil {
 		return err
 	}
 
 	// get gmail
-	client := infra.GoogleOauth2Config().Client(token)
+	client := infra.GoogleOauth2Config().Client(ctx, token)
 	srv, err := gmail.New(client)
 	if err != nil {
 		return err
@@ -76,14 +71,13 @@ func (a *authUsecaseImpl) AuthGoogle(ri *AuthRequestInput, rp *slack.SlashComman
 	}
 
 	gmailRepo := rdb.NewGmailRepository(infra.RDB)
-	err = gmailRepo.Save(&rdb.Gmail{
+	return gmailRepo.Save(&rdb.Gmail{
+		Email:        profile.EmailAddress,
+		TeamID:       rp.TeamID,
 		UserID:       rp.UserID,
 		AccessToken:  token.AccessToken,
 		RefreshToken: token.RefreshToken,
 		ExpiryDate:   token.Expiry,
 		TokenType:    token.TokenType,
-		Email:        profile.EmailAddress,
 	})
-
-	return err
 }
