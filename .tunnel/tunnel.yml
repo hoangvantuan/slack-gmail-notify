@@ -7,4 +7,4 @@ tunnels:
         # refirect to localhost
         addr: localhost:8080/
         # request from slgmails.tk
-        host: slgmails.tk
+        host: slgmails.mdshun.com

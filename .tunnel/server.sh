@@ -1,3 +1,3 @@
 #!/bin/bash
 
-tunneld -tlsCrt /root/.tunneld/fullchain.pem -tlsKey /root/.tunneld/privkey.pem > /dev/null 2>&1 &s
+tunneld -tlsCrt /root/.tunneld/fullchain.pem -tlsKey /root/.tunneld/privkey.pem > /dev/null 2>&1 &
