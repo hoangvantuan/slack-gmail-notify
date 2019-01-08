@@ -25,15 +25,14 @@ func (e *commandHandler) handler(ctx echo.Context) (err error) {
 		err = ctx.NoContent(http.StatusOK)
 	}()
 
-	rp := &slack.SlashCommand{}
-
-	if err = ctx.Bind(rp); err != nil {
+	rp, err := slack.SlashCommandParse(ctx.Request())
+	if err != nil {
 		infra.Warn(err)
 		return
 	}
 
 	uc := usecase.NewCommandUsecase()
-	err = uc.GetMainMenu(rp)
+	err = uc.GetMainMenu(&rp)
 	if err != nil {
 		infra.Warn(err)
 		return

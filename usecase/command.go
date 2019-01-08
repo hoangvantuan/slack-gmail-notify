@@ -33,7 +33,6 @@ func (c *commandUsecaseImpl) GetMainMenu(rp *slack.SlashCommand) error {
 	if err != nil {
 		return err
 	}
-
 	_, err = http.Post(rp.ResponseURL, "application/json", bytes.NewReader(msgatstr))
 	if err != nil {
 		return err

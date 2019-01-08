@@ -32,7 +32,7 @@ type envConfig struct {
 	GoogleRedirectedURL string   `env:"GOOGLE_REDIRECTED_URL"`
 }
 
-var repoPath = os.Getenv("GOPATH") + "src/github.com/mdshun/slack-gmail-notify"
+var repoPath = os.Getenv("GOPATH") + "/src/github.com/mdshun/slack-gmail-notify"
 
 const envExt = ".env"
 
@@ -58,5 +58,5 @@ func parseEnv() {
 }
 
 func envFileName() string {
-	return fmt.Sprintf(".%s.%s", envExt, getEnvironment())
+	return fmt.Sprintf("%s.%s", envExt, getEnvironment())
 }

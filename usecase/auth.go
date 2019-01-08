@@ -36,6 +36,8 @@ func (a *authUsecaseImpl) AuthSlack(ri *AuthRequestInput) error {
 		return err
 	}
 
+	// TODO: register user
+
 	// start transaction
 	teamRepo := rdb.NewTeamRepository(infra.RDB)
 	return teamRepo.Save(&rdb.Team{
@@ -69,6 +71,8 @@ func (a *authUsecaseImpl) AuthGoogle(ri *AuthRequestInput, rp *slack.SlashComman
 	if err != nil {
 		return err
 	}
+
+	// TODO: register user
 
 	gmailRepo := rdb.NewGmailRepository(infra.RDB)
 	return gmailRepo.Save(&rdb.Gmail{
