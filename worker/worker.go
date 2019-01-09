@@ -1,21 +1,23 @@
 package worker
 
 import (
+	"context"
+
 	"github.com/carlescere/scheduler"
 	"github.com/mdshun/slack-gmail-notify/infra"
 	"github.com/mdshun/slack-gmail-notify/repository/rdb"
-	"github.com/mdshun/slack-gmail-notify/util"
 	"github.com/nlopes/slack"
-	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
+	gm "google.golang.org/api/gmail/v1"
 )
 
 const (
-	fetchTimes = 10
+	fetchTimes = 2
 )
 
 // Job is define job with ID
-var jobs map[int]*scheduler.Job
+var jobs map[string]*scheduler.Job
+var jobStatus map[string]bool
 
 type messages struct {
 	m   []*message
@@ -32,165 +34,188 @@ type message struct {
 
 // Setup -
 func Setup() {
-	jobs = make(map[int]*scheduler.Job)
+	jobs = make(map[string]*scheduler.Job)
+	jobStatus = make(map[string]bool)
 
-	err := NotifyTeams()
-	if err != nil {
+	if err := NotifyForTeams(); err != nil {
 		panic(err)
 	}
 }
 
-// NotifyTeams -
-func NotifyTeams() error {
+// NotifyForTeams to all team
+func NotifyForTeams() error {
 	teamRepo := rdb.NewTeamRepository(infra.RDB)
 
 	teams, err := teamRepo.FindAllTeam()
 	if err != nil {
-		return errors.Wrap(err, "error while get all team")
+		return err
 	}
 
 	for _, team := range teams {
-		err = NotifyTeam(&team)
+		err = NotifyForTeam(team)
 		if err != nil {
-			return errors.Wrap(err, "error while notify all team")
+			return err
 		}
 	}
 
 	return nil
 }
 
-// NotifyTeam -
-func NotifyTeam(team *rdb.Team) error {
-	slackAPI, err := util.SlackAPI(team.TeamID)
-	if err != nil {
-		return errors.Wrap(err, "error while init slack client")
-	}
+// NotifyForTeam to team
+func NotifyForTeam(team *rdb.Team) error {
+	infra.Debug("Starting notify for team ", team.TeamName)
 
-	userRepo := rdb.NewUserRepository(infra.RDB)
-	users, err := userRepo.FindAllByTeamID(team.TeamID)
-	if err != nil {
-		return errors.Wrap(err, "error while get all users")
-	}
-
-	for _, user := range users {
-		err := NotifyUser(&user, slackAPI)
-		if err != nil {
-			return errors.Wrap(err, "error while notify user")
-		}
-	}
-	return nil
-}
-
-// NotifyUser -
-func NotifyUser(user *rdb.User, apiSlack *slack.Client) error {
+	apiSlack := slack.New(team.BotAccessToken)
 	gmailRepo := rdb.NewGmailRepository(infra.RDB)
-
-	gmails, err := gmailRepo.FindByUserID(user.UserID)
+	gmails, err := gmailRepo.FindByTeamID(team.TeamID)
 	if err != nil {
-		return errors.Wrap(err, "error while get list gmails of user")
+		return err
 	}
 
 	for _, gmail := range gmails {
-		err = NotifyGmail(&gmail, apiSlack)
+		err = NotifyForGmail(gmail, apiSlack)
 		if err != nil {
-			return errors.Wrap(err, "error while notify gmail")
+			return err
+		}
+	}
+
+	return nil
+}
+
+// NotifyForUser -
+func NotifyForUser(user *rdb.User) error {
+	teamRepo := rdb.NewTeamRepository(infra.RDB)
+	team, err := teamRepo.FindByTeamID(user.TeamID)
+	if err != nil {
+		return err
+	}
+
+	apiSlack := slack.New(team.BotAccessToken)
+
+	gmailRepo := rdb.NewGmailRepository(infra.RDB)
+	gmails, err := gmailRepo.FindByUser(user)
+	if err != nil {
+		return err
+	}
+
+	for _, gmail := range gmails {
+		err = NotifyForGmail(gmail, apiSlack)
+		if err != nil {
+			return err
 		}
 	}
 	return nil
 }
 
-// NotifyGmail -
-func NotifyGmail(gmail *rdb.Gmail, apiSlack *slack.Client) error {
+// NotifyForGmail -
+func NotifyForGmail(gmail *rdb.Gmail, apiSlack *slack.Client) error {
+	infra.Debug("Starting notify for ", gmail.Email)
+
 	// check email is working in job
-	StopNotifyGmail(gmail)
+	StopNotifyForGmail(gmail.Email)
 
 	job, err := scheduler.Every(fetchTimes).Seconds().Run(func() {
-		notify(gmail, apiSlack)
+		// not run if job is running
+		if jobStatus[gmail.Email] {
+			return
+		}
+
+		// set to running
+		jobStatus[gmail.Email] = true
+
+		err := notify(gmail, apiSlack)
+		if err != nil {
+			jobStatus[gmail.Email] = false
+			infra.Warn(err)
+		}
 	})
 	if err != nil {
-		return errors.Wrap(err, "have error while notify email")
+		return err
 	}
 
 	// add job
-	jobs[gmail.ID] = job
+	jobs[gmail.Email] = job
 
 	return nil
 }
 
-// StopNotifyTeam -
-func StopNotifyTeam(team *rdb.Team) error {
-	userRepo := rdb.NewUserRepository(infra.RDB)
-	users, err := userRepo.FindAllByTeamID(team.TeamID)
-	if err != nil {
-		return errors.Wrap(err, "error while get all users")
-	}
+// StopNotifyForTeam -
+func StopNotifyForTeam(team *rdb.Team) error {
+	infra.Debug("Stop notify for ", team.TeamName)
 
-	for _, user := range users {
-		err := StopNotifyUser(&user)
-		if err != nil {
-			return errors.Wrap(err, "error while notify user")
-		}
-	}
-	return nil
-}
-
-// StopNotifyUser -
-func StopNotifyUser(user *rdb.User) error {
 	gmailRepo := rdb.NewGmailRepository(infra.RDB)
-
-	gmails, err := gmailRepo.FindByUserID(user.UserID)
+	gmails, err := gmailRepo.FindByTeamID(team.TeamID)
 	if err != nil {
-		return errors.Wrap(err, "error while get list gmails of user")
+		return err
 	}
 
 	for _, gmail := range gmails {
-		err = StopNotifyGmail(&gmail)
-		if err != nil {
-			return errors.Wrap(err, "error while notify gmail")
-		}
+		StopNotifyForGmail(gmail.Email)
 	}
+
 	return nil
 }
 
-// StopNotifyGmail -
-func StopNotifyGmail(gmail *rdb.Gmail) error {
-	if jobs[gmail.ID] != nil {
-		curJob := jobs[gmail.ID]
+// StopNotifyForUser -
+func StopNotifyForUser(user *rdb.User) error {
+	gmailRepo := rdb.NewGmailRepository(infra.RDB)
+	gmails, err := gmailRepo.FindByUser(user)
+	if err != nil {
+		return err
+	}
+
+	for _, gmail := range gmails {
+		StopNotifyForGmail(gmail.Email)
+	}
+
+	return nil
+}
+
+// StopNotifyForGmail -
+func StopNotifyForGmail(mail string) {
+	if _, found := jobs[mail]; found {
+		infra.Debug("Stop notify for ", mail)
+		curJob := jobs[mail]
 		curJob.Quit <- true
 	}
-
-	return nil
 }
 
-func notify(gmail *rdb.Gmail, apiSlack *slack.Client) {
+func notify(gmail *rdb.Gmail, apiSlack *slack.Client) error {
+	infra.Debug("Starting notify for ", gmail.Email)
 	if gmail.NotifyChannelID == "" {
-		return
+		return nil
 	}
 
-	srv, err := util.GmailSrv(&oauth2.Token{
+	// get gmail
+	client := infra.GoogleOauth2Config().Client(context.Background(), &oauth2.Token{
 		AccessToken:  gmail.AccessToken,
 		RefreshToken: gmail.RefreshToken,
 		TokenType:    gmail.TokenType,
 		Expiry:       gmail.ExpiryDate,
 	})
+
+	srv, err := gm.New(client)
 	if err != nil {
-		return
+		return err
 	}
 
 	gw := newGGWorker(srv)
 	ms, err := gw.fetchUnread()
 	if err != nil {
-		return
+		return err
 	}
+
+	infra.Debug("Email ", gmail.Email, " has (", len(ms.ids), ") new message")
 
 	sw := newSlWorker(apiSlack)
-	err = sw.posts(ms.m, gmail.NotifyChannelID)
+	err = sw.posts(gw, ms.m, gmail.NotifyChannelID)
 	if err != nil {
-		return
+		return err
 	}
 
-	err = gw.read(ms)
-	if err != nil {
-		return
-	}
+	// set to stop
+	jobStatus[gmail.Email] = false
+	infra.Debug("Stop notify for ", gmail.Email)
+
+	return nil
 }

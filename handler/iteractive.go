@@ -6,6 +6,7 @@ import (
 
 	"github.com/labstack/echo"
 	"github.com/mdshun/slack-gmail-notify/usecase"
+	"github.com/mdshun/slack-gmail-notify/util"
 	"github.com/nlopes/slack"
 )
 
@@ -28,7 +29,7 @@ func (e *iteractiveHandler) handler(ctx echo.Context) error {
 	}
 
 	// Close button
-	if rp.Actions[0].Name == "close" {
+	if rp.Actions[0].Name == util.CloseName {
 		return ctx.JSON(http.StatusOK, slack.Msg{
 			ResponseType:    "ephemeral",
 			ReplaceOriginal: true,
@@ -38,21 +39,21 @@ func (e *iteractiveHandler) handler(ctx echo.Context) error {
 
 	uc := usecase.NewIteractiveUsecase()
 
-	if rp.Actions[0].Name == "list-gmail" {
-		err := uc.ListAccount(rp)
+	if rp.Actions[0].Name == util.ListGmailAccountName {
+		err := uc.ListAllAccount(rp)
 		if err != nil {
 			return ctx.NoContent(http.StatusOK)
 		}
 	}
 
-	if rp.Actions[0].Name == "notify-channel" {
-		err := uc.NotifyChannel(rp)
+	if rp.Actions[0].Name == util.NotifyChannelName {
+		err := uc.NotifyToChannel(rp)
 		if err != nil {
 			return ctx.NoContent(http.StatusOK)
 		}
 	}
 
-	if rp.Actions[0].Name == "remove-gmail" {
+	if rp.Actions[0].Name == util.RemmoveGmailAccountName {
 		err := uc.RemoveAccount(rp)
 		if err != nil {
 			return ctx.NoContent(http.StatusOK)

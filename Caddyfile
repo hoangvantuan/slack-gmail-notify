@@ -1,4 +1,4 @@
-slgmails.tk {
+https://slgmails.mdshun.com {
         log git.access.log
 
         proxy / http://127.0.0.1:8081 {

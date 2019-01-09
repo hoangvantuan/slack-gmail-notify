@@ -2,112 +2,12 @@ package rdb
 
 import (
 	"time"
-
-	"github.com/jinzhu/gorm"
 )
 
 // User is users table
 type User struct {
-	ID        uint   `gorm:"primary_key"`
-	UserID    string `gorm:"not null"`
-	TeamID    string `gorm:"not null"`
+	UserID    string `gorm:"primary_key"`
+	TeamID    string `gorm:"primary_key"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
-}
-
-// UserRepository is defind interface for team
-type UserRepository interface {
-	FindByID(id uint) (*User, error)
-	Add(user *User) (*User, error)
-	DeleteByID(id uint) error
-	Update(user *User) (*User, error)
-	FindAllByTeamID(teamID string) ([]User, error)
-	DeleteAllByTeamID(teamID string) error
-}
-
-type userRepositoryImpl struct {
-	db *gorm.DB
-}
-
-// NewUserRepository is return data access object for user table
-func NewUserRepository(db *gorm.DB) UserRepository {
-	// Migrate table if not exist
-	if !db.HasTable(&User{}) {
-		db.AutoMigrate(&User{})
-	}
-
-	return &userRepositoryImpl{db}
-}
-
-// FindByID will find user by id
-func (t *userRepositoryImpl) FindByID(id uint) (*User, error) {
-	user := &User{}
-	result := t.db.First(user, id)
-
-	if result.Error != nil {
-		return nil, result.Error
-	}
-
-	return user, nil
-}
-
-// Add is add user record
-func (t *userRepositoryImpl) Add(user *User) (*User, error) {
-	result := t.db.Create(user)
-
-	if result.Error != nil {
-		return nil, result.Error
-	}
-
-	if result.NewRecord(user) {
-		return nil, ErrCanNotCreateRecord
-	}
-
-	return user, nil
-}
-
-// DeleteByID is delete user by id
-func (t *userRepositoryImpl) DeleteByID(id uint) error {
-	result := t.db.Where("id = ?", id).Delete(User{})
-
-	if result.Error != nil {
-		return result.Error
-	}
-
-	return nil
-}
-
-// Update user
-func (t *userRepositoryImpl) Update(user *User) (*User, error) {
-	result := t.db.Save(user)
-
-	if result.Error != nil {
-		return nil, result.Error
-	}
-
-	return user, nil
-}
-
-// FindAllByTeamID return all user with team id
-func (t *userRepositoryImpl) FindAllByTeamID(teamID string) ([]User, error) {
-	users := []User{}
-
-	result := t.db.Where("team_id = ?", teamID).Find(&users)
-
-	if result.Error != nil {
-		return nil, result.Error
-	}
-
-	return users, nil
-}
-
-// DeleteAllByTeamID delete all user by teamid
-func (t *userRepositoryImpl) DeleteAllByTeamID(teamID string) error {
-	result := t.db.Where("team_id = ?", teamID).Delete(User{})
-
-	if result.Error != nil {
-		return result.Error
-	}
-
-	return nil
 }

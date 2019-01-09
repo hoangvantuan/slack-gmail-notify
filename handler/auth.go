@@ -8,6 +8,7 @@ import (
 	"github.com/mdshun/slack-gmail-notify/infra"
 	"github.com/mdshun/slack-gmail-notify/usecase"
 	"github.com/mdshun/slack-gmail-notify/util"
+	"github.com/nlopes/slack"
 	"golang.org/x/oauth2"
 )
 
@@ -54,19 +55,16 @@ func (a *authHandler) slackAuth(ctx echo.Context) error {
 		err = ctx.Validate(rp)
 	}
 	if err != nil {
-		return ctx.String(http.StatusBadRequest, "error parameter is invalid")
+		return ctx.String(http.StatusBadRequest, err.Error())
 	}
 
 	uc := usecase.NewAuthUsecase()
-
-	ri := &usecase.AuthRequestInput{
+	err = uc.AuthSlack(&usecase.AuthRequestInput{
 		Code:  rp.Code,
 		State: rp.State,
-	}
-
-	err = uc.SlackAuth(ri)
+	})
 	if err != nil {
-		return ctx.String(http.StatusInternalServerError, "error while save database")
+		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
 	return ctx.String(http.StatusOK, "thanks you for install app")
@@ -76,11 +74,11 @@ func (a *authHandler) googleAuth(ctx echo.Context) error {
 	rp := &authRequestParams{}
 
 	state := ctx.QueryParam("state")
-	decodedState, _ := util.Decrypt(state, infra.Env.EncryptKey)
-	secretInfo := &usecase.CommandRequestParams{}
+	decodedState, _ := util.Decrypt(state)
+	secretInfo := &slack.SlashCommand{}
 	err := json.Unmarshal([]byte(decodedState), secretInfo)
 	if err != nil {
-		return ctx.String(http.StatusBadRequest, "error parameter is invalid")
+		return ctx.String(http.StatusBadRequest, err.Error())
 	}
 	err = ctx.Bind(rp)
 	if err == nil {
@@ -88,20 +86,17 @@ func (a *authHandler) googleAuth(ctx echo.Context) error {
 		err = ctx.Validate(secretInfo)
 	}
 	if err != nil {
-		return ctx.String(http.StatusBadRequest, "error parameter is invalid")
+		return ctx.String(http.StatusBadRequest, err.Error())
 	}
 
 	uc := usecase.NewAuthUsecase()
-
-	ri := &usecase.AuthRequestInput{
+	err = uc.AuthGoogle(&usecase.AuthRequestInput{
 		Code:  rp.Code,
 		State: rp.State,
-	}
-
-	err = uc.GoogleAuth(ri, secretInfo)
+	}, secretInfo)
 	if err != nil {
-		return ctx.String(http.StatusInternalServerError, "error while save database")
+		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
-	return ctx.String(http.StatusOK, "thank you, add gmail account successfull!")
+	return ctx.String(http.StatusOK, "thanks you, register gmail account successfull!")
 }

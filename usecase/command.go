@@ -6,33 +6,16 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/mdshun/slack-gmail-notify/util"
-
 	"github.com/mdshun/slack-gmail-notify/infra"
+	"github.com/mdshun/slack-gmail-notify/util"
 	"github.com/nlopes/slack"
-	"github.com/pkg/errors"
 )
-
-// CommandRequestParams is request from command
-type CommandRequestParams struct {
-	Token       string `json:"token" form:"token"`
-	TeamID      string `json:"team_id" form:"team_id"`
-	TeamDomain  string `json:"team_domain" form:"team_domain"`
-	ChannelID   string `json:"channel_id" form:"channel_id"`
-	ChannelName string `json:"channel_name" form:"channel_name"`
-	UserID      string `json:"user_id" form:"user_id"`
-	UserName    string `json:"user_name" form:"user_name"`
-	Command     string `json:"command" form:"command"`
-	Text        string `json:"text" form:"text"`
-	ResponseURL string `json:"response_url" form:"response_url"`
-	TriggerID   string `json:"trigger_id" form:"trigger_id"`
-}
 
 type commandUsecaseImpl struct{}
 
 // CommandUsecase is event interface
 type CommandUsecase interface {
-	MainMenu(rp *CommandRequestParams) error
+	GetMainMenu(rp *slack.SlashCommand) error
 }
 
 // NewCommandUsecase will return event usecase
@@ -40,67 +23,67 @@ func NewCommandUsecase() CommandUsecase {
 	return &commandUsecaseImpl{}
 }
 
-func (c *commandUsecaseImpl) MainMenu(rp *CommandRequestParams) error {
-	msgAt := genInteractiveMenu(rp, "Hi, can i help you ?")
+func (c *commandUsecaseImpl) GetMainMenu(rp *slack.SlashCommand) error {
+	msgAt, err := genInteractiveMenu(rp, "Hi, can i help you ?")
+	if err != nil {
+		return err
+	}
 
 	msgatstr, err := json.Marshal(msgAt)
 	if err != nil {
-		return errors.Wrap(err, "have error while decode json")
+		return err
 	}
-
 	_, err = http.Post(rp.ResponseURL, "application/json", bytes.NewReader(msgatstr))
 	if err != nil {
-		return errors.Wrap(err, "have error while post message")
+		return err
 	}
 
 	return nil
 }
 
-func genInteractiveMenu(rp *CommandRequestParams, text string) slack.Msg {
+func genInteractiveMenu(rp *slack.SlashCommand, text string) (*slack.Msg, error) {
 	at := slack.Attachment{}
 
-	pjson, _ := json.Marshal(rp)
-	pjsoneconded, _ := util.Encrypt(string(pjson), infra.Env.EncryptKey)
+	pjson, err := json.Marshal(rp)
+	if err != nil {
+		return nil, err
+	}
+	pjsoneconded, err := util.Encrypt(string(pjson))
+	if err != nil {
+		return nil, err
+	}
 	// generate action
 	addBtn := slack.AttachmentAction{
-		Name:  "add-gmail-account",
-		Text:  "Add Gmail",
-		Value: "AddGmailAccount",
-		Style: "primary",
-		Type:  "button",
+		Name:  util.AddGmailAccountName,
+		Text:  util.AddGmailAccountText,
+		Value: util.AddGmailAccountValue,
+		Style: util.AddGmailAccountStyle,
+		Type:  util.AddGmailAccountType,
 		URL:   fmt.Sprintf("%s/v1/auth/google?state=%s", infra.Env.APIHost, pjsoneconded),
 	}
 
-	// settingBtn := slack.AttachmentAction{
-	// 	Name:  "setting",
-	// 	Text:  "Setting",
-	// 	Value: "setting",
-	// 	Style: "default",
-	// 	Type:  "button",
-	// }
-
 	listBtn := slack.AttachmentAction{
-		Name:  "list-gmail",
-		Text:  "List Gmails",
-		Value: "list-gmail",
-		Style: "primary",
-		Type:  "button",
+		Name:  util.ListGmailAccountName,
+		Text:  util.ListGmailAccountText,
+		Value: util.ListGmailAccountValue,
+		Style: util.ListGmailAccountStyle,
+		Type:  util.ListGmailAccountType,
 	}
 
 	closeBtn := slack.AttachmentAction{
-		Name:  "close",
-		Text:  "Close",
-		Value: "close",
-		Style: "danger",
-		Type:  "button",
+		Name:  util.CloseName,
+		Text:  util.CloseText,
+		Value: util.CloseValue,
+		Style: util.CloseStyle,
+		Type:  util.CloseType,
 	}
 
 	at.CallbackID = "main-menu"
 	at.Actions = []slack.AttachmentAction{addBtn, listBtn, closeBtn}
 
-	return slack.Msg{
+	return &slack.Msg{
 		Text:            text,
 		ReplaceOriginal: true,
 		Attachments:     []slack.Attachment{at},
-	}
+	}, nil
 }

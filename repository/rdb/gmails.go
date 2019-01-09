@@ -8,14 +8,14 @@ import (
 
 // Gmail is gmails table
 type Gmail struct {
-	ID              int       `gorm:"primary_key"`
-	UserID          string    `gorm:"not null"`
-	Email           string    `gorm:"not null"`
-	AccessToken     string    `gorm:"not null;size:1000"`
-	RefreshToken    string    `gorm:"not null;size:1000"`
-	TokenType       string    `gorm:"not null"`
-	Scope           string    `gorm:"not null"`
-	ExpiryDate      time.Time `gorm:"not null"`
+	Email           string `gorm:"primary_key"`
+	TeamID          string
+	UserID          string
+	AccessToken     string
+	RefreshToken    string
+	TokenType       string
+	Scope           string
+	ExpiryDate      time.Time
 	NotifyChannelID string
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
@@ -23,13 +23,12 @@ type Gmail struct {
 
 // GmailRepository is defind interface for team
 type GmailRepository interface {
-	FindByID(id int) (*Gmail, error)
-	Add(gmail *Gmail) (*Gmail, error)
-	DeleteByID(id int) error
-	Update(gmail *Gmail) (*Gmail, error)
-	DeleteAllByUserID(userID string) error
-	FindByEmail(email, userID string) (*Gmail, error)
-	FindByUserID(userID string) ([]Gmail, error)
+	DeleteByEmail(email string) error
+	DeleteByUser(user *User) error
+	FindByEmail(email string) (*Gmail, error)
+	FindByTeamID(teamID string) ([]*Gmail, error)
+	FindByUser(user *User) ([]*Gmail, error)
+	Save(gmail *Gmail) error
 }
 
 type gmailRepositoryImpl struct {
@@ -46,84 +45,52 @@ func NewGmailRepository(db *gorm.DB) GmailRepository {
 	return &gmailRepositoryImpl{db}
 }
 
-// FindByID will find gmail by id
-func (t *gmailRepositoryImpl) FindByID(id int) (*Gmail, error) {
+// FindByEmail will find gmail by id
+func (t *gmailRepositoryImpl) FindByEmail(email string) (*Gmail, error) {
 	gmail := &Gmail{}
-	result := t.db.First(gmail, id)
+	result := t.db.Where("email = ?", email).First(gmail)
 	if result.Error != nil {
 		return nil, result.Error
-	}
-
-	return gmail, nil
-}
-
-// Add is add gmail record
-func (t *gmailRepositoryImpl) Add(gmail *Gmail) (*Gmail, error) {
-	result := t.db.Create(gmail)
-
-	if result.Error != nil {
-		return nil, result.Error
-	}
-	if result.NewRecord(gmail) {
-		return nil, ErrCanNotCreateRecord
 	}
 
 	return gmail, nil
 }
 
 // DeleteByID is delete gmail by id
-func (t *gmailRepositoryImpl) DeleteByID(id int) error {
-	result := t.db.Where("id = ?", id).Delete(Gmail{})
-
-	if result.Error != nil {
-		return result.Error
-	}
-
-	return nil
+func (t *gmailRepositoryImpl) DeleteByEmail(email string) error {
+	return t.db.Where("email = ?", email).Delete(Gmail{}).Error
 }
 
-// Update gmail
-func (t *gmailRepositoryImpl) Update(gmail *Gmail) (*Gmail, error) {
-	result := t.db.Save(gmail)
-
-	if result.Error != nil {
-		return nil, result.Error
-	}
-
-	return gmail, nil
+// DeleteByUser delete all user by user id
+func (t *gmailRepositoryImpl) DeleteByUser(user *User) error {
+	return t.db.Where("user_id = ? AND team_id = ?", user.UserID, user.TeamID).Delete(Gmail{}).Error
 }
 
-// DeleteAllByUserID delete all user by user id
-func (t *gmailRepositoryImpl) DeleteAllByUserID(userID string) error {
-	result := t.db.Where("user_id = ?", userID).Delete(Gmail{})
-
-	if result.Error != nil {
-		return result.Error
-	}
-
-	return nil
-}
-
-// FindByEmail will find gmail by id
-func (t *gmailRepositoryImpl) FindByEmail(email, userID string) (*Gmail, error) {
-	gmail := &Gmail{}
-	result := t.db.Where("email = ? AND user_id = ?", email, userID).First(gmail)
-
-	if result.Error != nil {
-		return nil, result.Error
-	}
-
-	return gmail, nil
-}
-
-// FindByUserID will find gmail by id
-func (t *gmailRepositoryImpl) FindByUserID(userID string) ([]Gmail, error) {
-	gmails := []Gmail{}
-	result := t.db.Where("user_id = ?", userID).Find(&gmails)
+// FindByTeamID will find gmail by id
+func (t *gmailRepositoryImpl) FindByTeamID(teamID string) ([]*Gmail, error) {
+	gmails := []*Gmail{}
+	result := t.db.Where("team_id = ?", teamID).Find(&gmails)
 
 	if result.Error != nil {
 		return nil, result.Error
 	}
 
 	return gmails, nil
+}
+
+// FindByUserIDAndTeamID -
+func (t *gmailRepositoryImpl) FindByUser(user *User) ([]*Gmail, error) {
+	gmails := []*Gmail{}
+	result := t.db.Where("team_id = ? AND user_id = ?", user.TeamID, user.UserID).Find(&gmails)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return gmails, nil
+}
+
+// Save -
+func (t *gmailRepositoryImpl) Save(gmail *Gmail) error {
+	return t.db.Save(gmail).Error
 }
