@@ -40,7 +40,7 @@ func (n *slWorkerImpl) posts(ms []*message, to string) error {
 		if err != nil {
 			return err
 		}
-		time.Sleep(time.Second)
+		time.Sleep(time.Second * 2)
 	}
 
 	return nil
