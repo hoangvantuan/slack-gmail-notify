@@ -12,11 +12,12 @@ import (
 )
 
 const (
-	fetchTimes = 10
+	fetchTimes = 2
 )
 
 // Job is define job with ID
 var jobs map[string]*scheduler.Job
+var jobStatus map[string]bool
 
 type messages struct {
 	m   []*message
@@ -34,6 +35,7 @@ type message struct {
 // Setup -
 func Setup() {
 	jobs = make(map[string]*scheduler.Job)
+	jobStatus = make(map[string]bool)
 
 	if err := NotifyForTeams(); err != nil {
 		panic(err)
@@ -61,8 +63,9 @@ func NotifyForTeams() error {
 
 // NotifyForTeam to team
 func NotifyForTeam(team *rdb.Team) error {
-	apiSlack := slack.New(team.BotAccessToken)
+	infra.Debug("Starting notify for team ", team.TeamName)
 
+	apiSlack := slack.New(team.BotAccessToken)
 	gmailRepo := rdb.NewGmailRepository(infra.RDB)
 	gmails, err := gmailRepo.FindByTeamID(team.TeamID)
 	if err != nil {
@@ -106,12 +109,23 @@ func NotifyForUser(user *rdb.User) error {
 
 // NotifyForGmail -
 func NotifyForGmail(gmail *rdb.Gmail, apiSlack *slack.Client) error {
+	infra.Debug("Starting notify for ", gmail.Email)
+
 	// check email is working in job
 	StopNotifyForGmail(gmail.Email)
 
 	job, err := scheduler.Every(fetchTimes).Seconds().Run(func() {
+		// not run if job is running
+		if jobStatus[gmail.Email] {
+			return
+		}
+
+		// set to running
+		jobStatus[gmail.Email] = true
+
 		err := notify(gmail, apiSlack)
 		if err != nil {
+			jobStatus[gmail.Email] = false
 			infra.Warn(err)
 		}
 	})
@@ -127,6 +141,8 @@ func NotifyForGmail(gmail *rdb.Gmail, apiSlack *slack.Client) error {
 
 // StopNotifyForTeam -
 func StopNotifyForTeam(team *rdb.Team) error {
+	infra.Debug("Stop notify for ", team.TeamName)
+
 	gmailRepo := rdb.NewGmailRepository(infra.RDB)
 	gmails, err := gmailRepo.FindByTeamID(team.TeamID)
 	if err != nil {
@@ -157,13 +173,15 @@ func StopNotifyForUser(user *rdb.User) error {
 
 // StopNotifyForGmail -
 func StopNotifyForGmail(mail string) {
-	if jobs[mail] != nil {
+	if _, found := jobs[mail]; found {
+		infra.Debug("Stop notify for ", mail)
 		curJob := jobs[mail]
 		curJob.Quit <- true
 	}
 }
 
 func notify(gmail *rdb.Gmail, apiSlack *slack.Client) error {
+	infra.Debug("Starting notify for ", gmail.Email)
 	if gmail.NotifyChannelID == "" {
 		return nil
 	}
@@ -187,16 +205,17 @@ func notify(gmail *rdb.Gmail, apiSlack *slack.Client) error {
 		return err
 	}
 
+	infra.Debug("Email ", gmail.Email, " has (", len(ms.ids), ") new message")
+
 	sw := newSlWorker(apiSlack)
-	err = sw.posts(ms.m, gmail.NotifyChannelID)
+	err = sw.posts(gw, ms.m, gmail.NotifyChannelID)
 	if err != nil {
 		return err
 	}
 
-	err = gw.read(ms)
-	if err != nil {
-		return err
-	}
+	// set to stop
+	jobStatus[gmail.Email] = false
+	infra.Debug("Stop notify for ", gmail.Email)
 
 	return nil
 }

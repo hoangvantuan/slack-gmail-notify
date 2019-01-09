@@ -3,13 +3,13 @@ package worker
 import (
 	"encoding/base64"
 
-	"github.com/pkg/errors"
+	"github.com/mdshun/slack-gmail-notify/infra"
 	gm "google.golang.org/api/gmail/v1"
 )
 
 type ggWorker interface {
 	fetchUnread() (*messages, error)
-	read(m *messages) error
+	read(m *message) error
 }
 
 type ggWorkerImpl struct {
@@ -23,23 +23,19 @@ func newGGWorker(srv *gm.Service) ggWorker {
 func (g *ggWorkerImpl) fetchUnread() (*messages, error) {
 	mrs, err := g.srv.Users.Messages.List("me").LabelIds("UNREAD").Do()
 	if err != nil {
-		return nil, errors.Wrap(err, "can not fetch list message")
+		return nil, err
 	}
 
 	return g.parseMessage(mrs), nil
 }
 
-func (g *ggWorkerImpl) read(m *messages) error {
-	if m == nil || len(m.ids) == 0 {
-		return nil
-	}
-
-	err := g.srv.Users.Messages.BatchModify("me", &gm.BatchModifyMessagesRequest{
-		Ids:            m.ids,
+func (g *ggWorkerImpl) read(m *message) error {
+	infra.Debug("Remove UNREAD for ", m.ID)
+	_, err := g.srv.Users.Messages.Modify("me", m.ID, &gm.ModifyMessageRequest{
 		RemoveLabelIds: []string{"UNREAD"},
 	}).Do()
 	if err != nil {
-		return errors.Wrap(err, "can not remove UNREAD label")
+		return err
 	}
 
 	return nil
@@ -50,6 +46,7 @@ func (g *ggWorkerImpl) parseMessage(mr *gm.ListMessagesResponse) *messages {
 	for _, m := range mr.Messages {
 		msg := &message{}
 		ms.ids = append(ms.ids, m.Id)
+		msg.ID = m.Id
 
 		msd, err := g.srv.Users.Messages.Get("me", m.Id).Do()
 		if err != nil {

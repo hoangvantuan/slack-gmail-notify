@@ -21,9 +21,8 @@ func NewRdbexRepository(db *gorm.DB) RdbexRepository {
 // DeleteTeam delete all team
 func (r *rdbexRepositoryImpl) DeleteTeam(teamID string) error {
 	sql := `
-	DELETE teams, users, gmails
+	DELETE teams, gmails
 	FROM teams as t
-	INNER JOIN users as u ON t.team_id = u.team_id
 	INNER JOIN gmails as g ON g.team_id = g.team_id
 	WHERE t.team_id = ?
 	`
