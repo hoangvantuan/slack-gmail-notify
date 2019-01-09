@@ -4,12 +4,11 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/nlopes/slack"
-
 	"github.com/labstack/echo"
 	"github.com/mdshun/slack-gmail-notify/infra"
 	"github.com/mdshun/slack-gmail-notify/usecase"
 	"github.com/mdshun/slack-gmail-notify/util"
+	"github.com/nlopes/slack"
 	"golang.org/x/oauth2"
 )
 

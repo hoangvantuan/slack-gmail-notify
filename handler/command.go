@@ -3,11 +3,10 @@ package handler
 import (
 	"net/http"
 
-	"github.com/nlopes/slack"
-
 	"github.com/labstack/echo"
 	"github.com/mdshun/slack-gmail-notify/infra"
 	"github.com/mdshun/slack-gmail-notify/usecase"
+	"github.com/nlopes/slack"
 )
 
 type commandHandler struct{}
@@ -30,7 +29,6 @@ func (e *commandHandler) handler(ctx echo.Context) (err error) {
 		infra.Warn(err)
 		return
 	}
-
 	uc := usecase.NewCommandUsecase()
 	err = uc.GetMainMenu(&rp)
 	if err != nil {

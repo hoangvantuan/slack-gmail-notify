@@ -154,9 +154,9 @@ func listAccount(ir *IteractiveRequestParams, text string) (*slack.Msg, error) {
 
 	selectChannelBtn := func(value string) slack.AttachmentAction {
 		return slack.AttachmentAction{
-			Name:       "notify-channel",
-			Text:       "Notify To",
-			Type:       "select",
+			Name:       util.NotifyChannelName,
+			Text:       util.NotifyChannelText,
+			Type:       util.NotifyChannelType,
 			DataSource: "channels",
 			SelectedOptions: []slack.AttachmentActionOption{
 				{
@@ -170,10 +170,10 @@ func listAccount(ir *IteractiveRequestParams, text string) (*slack.Msg, error) {
 	// value is gmail id
 	removeBtn :=
 		slack.AttachmentAction{
-			Name:  "remove-gmail",
-			Text:  "Remove",
-			Style: "danger",
-			Type:  "button",
+			Name:  util.RemmoveGmailAccountName,
+			Text:  util.RemmoveGmailAccountText,
+			Style: util.RemmoveGmailAccountStyle,
+			Type:  util.RemmoveGmailAccountType,
 		}
 
 	closeAt := slack.Attachment{

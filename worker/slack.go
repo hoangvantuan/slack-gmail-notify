@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pkg/errors"
-
 	"github.com/nlopes/slack"
 )
 
@@ -30,7 +28,7 @@ func (n *slWorkerImpl) post(m *message, to string) error {
 		Filename: m.Subject,
 	})
 	if err != nil {
-		return errors.Wrap(err, "have error while post message")
+		return err
 	}
 
 	return nil

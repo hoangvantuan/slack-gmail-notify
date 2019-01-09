@@ -46,14 +46,14 @@ func (e *iteractiveHandler) handler(ctx echo.Context) error {
 		}
 	}
 
-	if rp.Actions[0].Name == "notify-channel" {
+	if rp.Actions[0].Name == util.NotifyChannelName {
 		err := uc.NotifyToChannel(rp)
 		if err != nil {
 			return ctx.NoContent(http.StatusOK)
 		}
 	}
 
-	if rp.Actions[0].Name == "remove-gmail" {
+	if rp.Actions[0].Name == util.RemmoveGmailAccountName {
 		err := uc.RemoveAccount(rp)
 		if err != nil {
 			return ctx.NoContent(http.StatusOK)

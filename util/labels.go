@@ -2,11 +2,12 @@ package util
 
 const (
 	// style
-	primary = "primary"
-	danger  = "danger"
+	primaryStyle = "primary"
+	dangerStyle  = "danger"
 
 	// type
-	button = "button"
+	buttonType = "button"
+	selectType = "select"
 
 	// AddGmailAccountName is add gmail account name
 	AddGmailAccountName = "ADD-GMAIL-ACCOUNT"
@@ -15,9 +16,9 @@ const (
 	// AddGmailAccountValue is add gmail account value
 	AddGmailAccountValue = "ADD-GMAIL-ACCOUNT"
 	// AddGmailAccountStyle is style
-	AddGmailAccountStyle = primary
+	AddGmailAccountStyle = primaryStyle
 	// AddGmailAccountType is type
-	AddGmailAccountType = button
+	AddGmailAccountType = buttonType
 	// ListGmailAccountName is list gmail account name
 	ListGmailAccountName = "LIST-GMAIL-ACCOUNT"
 	// ListGmailAccountText is list gmail account text
@@ -25,9 +26,9 @@ const (
 	// ListGmailAccountValue is list gmail account value
 	ListGmailAccountValue = "LIST-GMAIL-ACCOUNT"
 	// ListGmailAccountStyle is list gmail account style
-	ListGmailAccountStyle = primary
+	ListGmailAccountStyle = primaryStyle
 	// ListGmailAccountType is list gmail account type
-	ListGmailAccountType = button
+	ListGmailAccountType = buttonType
 	// CloseName is close name
 	CloseName = "CLOSE"
 	// CloseText is close text
@@ -35,7 +36,23 @@ const (
 	// CloseValue is close value
 	CloseValue = "CLOSE"
 	// CloseStyle is close style
-	CloseStyle = danger
+	CloseStyle = dangerStyle
 	// CloseType is close type
-	CloseType = button
+	CloseType = buttonType
+	// NotifyChannelName is notify channel name
+	NotifyChannelName = "NOTIFY-CHANNEL"
+	// NotifyChannelText is notify channel text
+	NotifyChannelText = "Notify To"
+	// NotifyChannelType is notify channel type
+	NotifyChannelType = selectType
+	// RemmoveGmailAccountName is remove gmail account name
+	RemmoveGmailAccountName = "REMOVE-GMAIL-ACCOUNT"
+	// AddGmailAccountText is add gmail account text
+	RemmoveGmailAccountText = "Remove Gmail"
+	// AddGmailAccountValue is add gmail account value
+	RemmoveGmailAccountValue = "REMOVE-GMAIL-ACCOUNT"
+	// AddGmailAccountStyle is style
+	RemmoveGmailAccountStyle = dangerStyle
+	// AddGmailAccountType is type
+	RemmoveGmailAccountType = buttonType
 )
