@@ -2,7 +2,9 @@ package worker
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/mdshun/slack-gmail-notify/infra"
 	"github.com/nlopes/slack"
 )
 
@@ -25,6 +27,7 @@ func (n *slWorkerImpl) post(gg ggWorker, m *message, to string) error {
 		Channels: []string{to},
 		Content:  fmt.Sprintf("### FROM: %s\n\n%s", m.From, m.Body),
 		Filename: m.Subject,
+		Title:    m.Subject,
 	})
 	if err != nil {
 		return err
@@ -39,12 +42,15 @@ func (n *slWorkerImpl) post(gg ggWorker, m *message, to string) error {
 }
 
 func (n *slWorkerImpl) posts(gg ggWorker, ms []*message, to string) error {
+	count := 1
 	for _, m := range ms {
+		infra.Debug(fmt.Sprintf("%d message was sent to %s", count, to))
+		count = count + 1
 		err := n.post(gg, m, to)
 		if err != nil {
 			return err
 		}
-		//time.Sleep(time.Second)
+		time.Sleep(time.Second)
 	}
 
 	return nil

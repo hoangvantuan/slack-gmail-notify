@@ -3,7 +3,6 @@ package worker
 import (
 	"encoding/base64"
 
-	"github.com/mdshun/slack-gmail-notify/infra"
 	gm "google.golang.org/api/gmail/v1"
 )
 
@@ -30,7 +29,6 @@ func (g *ggWorkerImpl) fetchUnread() (*messages, error) {
 }
 
 func (g *ggWorkerImpl) read(m *message) error {
-	infra.Debug("Remove UNREAD for ", m.ID)
 	_, err := g.srv.Users.Messages.Modify("me", m.ID, &gm.ModifyMessageRequest{
 		RemoveLabelIds: []string{"UNREAD"},
 	}).Do()
@@ -40,8 +38,8 @@ func (g *ggWorkerImpl) read(m *message) error {
 
 	return nil
 }
-
 func (g *ggWorkerImpl) parseMessage(mr *gm.ListMessagesResponse) *messages {
+
 	ms := &messages{}
 	for _, m := range mr.Messages {
 		msg := &message{}
@@ -70,16 +68,24 @@ func (g *ggWorkerImpl) parseMessage(mr *gm.ListMessagesResponse) *messages {
 		// parse body
 		switch {
 		case msd.Payload.MimeType == "text/plain" || msd.Payload.MimeType == "multipart/alternative":
+			var body string
+
+			if len(msd.Payload.Parts) == 0 {
+				body = msd.Payload.Body.Data
+			}
+
 			for _, p := range msd.Payload.Parts {
 				if p.MimeType == "text/plain" {
-					c, err := base64.URLEncoding.DecodeString(p.Body.Data)
-					if err != nil {
-						return &messages{}
-					}
-
-					msg.Body = string(c)
+					body = p.Body.Data
 				}
 			}
+
+			c, err := base64.URLEncoding.DecodeString(body)
+			if err != nil {
+				return &messages{}
+			}
+
+			msg.Body = string(c)
 		default:
 			msg.Body = msd.Snippet
 		}
