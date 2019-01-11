@@ -14,14 +14,12 @@ const (
 
 func (e environment) String() string {
 	switch e {
-	case dev:
-		return "dev"
 	case stg:
 		return "stg"
 	case prod:
 		return "prod"
 	default:
-		return "unknown"
+		return "dev"
 	}
 }
 

@@ -4,31 +4,35 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const (
-	slackAuthURL = "https://slack.com/oauth/authorize"
+var (
+	slackAuthURL   = "https://slack.com/oauth/authorize"
+	slackScopes    = []string{"commands", "bot"}
+	googleScopes   = []string{"https://www.googleapis.com/auth/gmail.readonly", "https://www.googleapis.com/auth/gmail.modify"}
+	googleAuthURL  = "https://accounts.google.com/o/oauth2/auth"
+	googleTokenURL = "https://www.googleapis.com/oauth2/v3/token"
 )
 
-// GetOauth2Config return google oauth2 config
+// GoogleOauth2Config return google oauth2 config
 func GoogleOauth2Config() *oauth2.Config {
 	return &oauth2.Config{
 		ClientID:     Env.GoogleClientID,
 		ClientSecret: Env.GoogleClientSecret,
-		Scopes:       Env.GoogleScopes,
-		RedirectURL:  Env.GoogleRedirectedURL,
+		Scopes:       googleScopes,
+		RedirectURL:  Env.APIHost + "/" + Env.GoogleRedirectedPath,
 		Endpoint: oauth2.Endpoint{
-			AuthURL:  Env.GoogleAuthURL,
-			TokenURL: Env.GoogleTokenURL,
+			AuthURL:  googleAuthURL,
+			TokenURL: googleTokenURL,
 		},
 	}
 }
 
-// SlackOauth2Config reutrn slack oauth2 oonfig
+// SlackOauth2Config return slack oauth2 config
 func SlackOauth2Config() *oauth2.Config {
 	return &oauth2.Config{
 		ClientID:     Env.SlackClientID,
 		ClientSecret: Env.SlackClientSecret,
-		Scopes:       Env.SlackScope,
-		RedirectURL:  Env.SlackRedirectedURL,
+		Scopes:       slackScopes,
+		RedirectURL:  Env.APIHost + "/" + Env.SlackRedirectedPath,
 		Endpoint: oauth2.Endpoint{
 			AuthURL: slackAuthURL,
 		},

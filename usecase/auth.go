@@ -31,7 +31,7 @@ func NewAuthUsecase() AuthUsecase {
 
 func (a *authUsecaseImpl) AuthSlack(ri *AuthRequestInput) error {
 	// Get authentication response from slack
-	or, err := slack.GetOAuthResponse(infra.Env.SlackClientID, infra.Env.SlackClientSecret, ri.Code, infra.Env.SlackRedirectedURL, infra.IsProduction())
+	or, err := slack.GetOAuthResponse(infra.Env.SlackClientID, infra.Env.SlackClientSecret, ri.Code, infra.Env.APIHost+"/"+infra.Env.SlackRedirectedPath, infra.IsProduction())
 	if err != nil {
 		return err
 	}
