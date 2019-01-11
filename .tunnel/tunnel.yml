@@ -1,7 +1,7 @@
 # connect host
 server_addr: 54.92.46.176:5223
 tunnels:
-    webui:
+    dev:
         # protocol
         proto: http
         # refirect to localhost
