@@ -8,3 +8,10 @@ tunnels:
         addr: localhost:8080/
         # request from slgmails.tk
         host: dev-slgmails.mdshun.com
+    stg:
+        # protocol
+        proto: http
+        # refirect to localhost
+        addr: localhost:8080/
+        # request from slgmails.tk
+        host: stg-slgmails.mdshun.com
