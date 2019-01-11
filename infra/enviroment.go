@@ -31,6 +31,9 @@ func Setup() {
 
 	setupLogger()
 	setupEnv()
+
+	Info("Running on ", getEnvironment())
+
 	setupDatabase()
 }
 
