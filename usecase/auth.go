@@ -11,6 +11,11 @@ import (
 	"google.golang.org/api/googleapi"
 )
 
+type UserIdentity struct {
+	UserID string `json:"userId" validate:"required"`
+	TeamID string `json:"teamId" validate:"required"`
+}
+
 // AuthRequestInput is auth request param
 type AuthRequestInput struct {
 	Code  string
@@ -22,7 +27,7 @@ type authUsecaseImpl struct{}
 // AuthUsecase is auth interface
 type AuthUsecase interface {
 	AuthSlack(ri *AuthRequestInput) error
-	AuthGoogle(ri *AuthRequestInput, rp *slack.SlashCommand) error
+	AuthGoogle(ri *AuthRequestInput, rp *UserIdentity) error
 }
 
 // NewAuthUsecase will return auth usecase
@@ -50,7 +55,7 @@ func (a *authUsecaseImpl) AuthSlack(ri *AuthRequestInput) error {
 	})
 }
 
-func (a *authUsecaseImpl) AuthGoogle(ri *AuthRequestInput, rp *slack.SlashCommand) error {
+func (a *authUsecaseImpl) AuthGoogle(ri *AuthRequestInput, rp *UserIdentity) error {
 	ctx := context.Background()
 	token, err := infra.GoogleOauth2Config().Exchange(ctx, ri.Code)
 	if err != nil {

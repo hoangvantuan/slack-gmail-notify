@@ -167,6 +167,14 @@ func listAccount(ir *IteractiveRequestParams, text string) (*slack.Msg, error) {
 		}
 	}
 
+	mainActions, err := generateMenuAttachAction(&UserIdentity{
+		TeamID: ir.Team.ID,
+		UserID: ir.User.ID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	// value is gmail id
 	removeBtn :=
 		slack.AttachmentAction{
@@ -176,17 +184,9 @@ func listAccount(ir *IteractiveRequestParams, text string) (*slack.Msg, error) {
 			Type:  util.RemmoveGmailAccountType,
 		}
 
-	closeAt := slack.Attachment{
-		CallbackID: "close",
-		Actions: []slack.AttachmentAction{
-			slack.AttachmentAction{
-				Name:  util.CloseName,
-				Text:  util.CloseText,
-				Value: util.CloseValue,
-				Style: util.CloseStyle,
-				Type:  util.CloseType,
-			},
-		},
+	menu := slack.Attachment{
+		CallbackID: "main-menu",
+		Actions:    mainActions,
 	}
 
 	ats := []slack.Attachment{}
@@ -204,7 +204,7 @@ func listAccount(ir *IteractiveRequestParams, text string) (*slack.Msg, error) {
 		ats = append(ats, at)
 	}
 
-	ats = append(ats, closeAt)
+	ats = append(ats, menu)
 
 	return &slack.Msg{
 		Text:            text,

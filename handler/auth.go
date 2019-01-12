@@ -8,7 +8,6 @@ import (
 	"github.com/mdshun/slack-gmail-notify/infra"
 	"github.com/mdshun/slack-gmail-notify/usecase"
 	"github.com/mdshun/slack-gmail-notify/util"
-	"github.com/nlopes/slack"
 	"golang.org/x/oauth2"
 )
 
@@ -75,7 +74,7 @@ func (a *authHandler) googleAuth(ctx echo.Context) error {
 
 	state := ctx.QueryParam("state")
 	decodedState, _ := util.Decrypt(state)
-	secretInfo := &slack.SlashCommand{}
+	secretInfo := &usecase.UserIdentity{}
 	err := json.Unmarshal([]byte(decodedState), secretInfo)
 	if err != nil {
 		return ctx.String(http.StatusBadRequest, err.Error())

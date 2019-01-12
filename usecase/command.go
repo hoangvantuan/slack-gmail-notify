@@ -44,7 +44,26 @@ func (c *commandUsecaseImpl) GetMainMenu(rp *slack.SlashCommand) error {
 func genInteractiveMenu(rp *slack.SlashCommand, text string) (*slack.Msg, error) {
 	at := slack.Attachment{}
 
-	pjson, err := json.Marshal(rp)
+	at.CallbackID = "main-menu"
+	actions, err := generateMenuAttachAction(&UserIdentity{
+		UserID: rp.UserID,
+		TeamID: rp.TeamID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	at.Actions = actions
+
+	return &slack.Msg{
+		Text:            text,
+		ReplaceOriginal: true,
+		Attachments:     []slack.Attachment{at},
+	}, nil
+}
+
+func generateMenuAttachAction(ui *UserIdentity) ([]slack.AttachmentAction, error) {
+	pjson, err := json.Marshal(ui)
 	if err != nil {
 		return nil, err
 	}
@@ -78,12 +97,5 @@ func genInteractiveMenu(rp *slack.SlashCommand, text string) (*slack.Msg, error)
 		Type:  util.CloseType,
 	}
 
-	at.CallbackID = "main-menu"
-	at.Actions = []slack.AttachmentAction{addBtn, listBtn, closeBtn}
-
-	return &slack.Msg{
-		Text:            text,
-		ReplaceOriginal: true,
-		Attachments:     []slack.Attachment{at},
-	}, nil
+	return []slack.AttachmentAction{addBtn, listBtn, closeBtn}, nil
 }
