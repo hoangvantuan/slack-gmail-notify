@@ -11,4 +11,4 @@ RUN export PATH=$PATH:$GOBIN && \
 COPY *.env ./
 EXPOSE 8081
 
-CMD [ "./sgn" ]
+CMD [ "slack-gmail-notify" ]
