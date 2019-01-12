@@ -12,4 +12,4 @@ create-tunnel-server:
 tunnel-client:
 	tunnel -config .tunnel/tunnel.yml start-all
 tunnel-server:
-	tunneld -tlsCrt ./tunnel/server.crt -tlsKey /root/.tunneld/server.key > /dev/null 2>&1 &
+	tunneld -tlsCrt ./tunnel/server.crt -tlsKey .tunneld/server.key > /dev/null 2>&1 &
