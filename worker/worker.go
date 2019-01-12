@@ -25,6 +25,11 @@ type safeJobStatus struct {
 	mux       sync.Mutex
 }
 
+type safeJobs struct {
+	jobs map[string]*scheduler.Job
+	mux  sync.Mutex
+}
+
 func (s *safeJobStatus) set(k string, v bool) {
 	s.mux.Lock()
 	s.jobStatus[k] = v
@@ -37,8 +42,33 @@ func (s *safeJobStatus) get(k string) bool {
 	return s.jobStatus[k]
 }
 
+func (s *safeJobs) set(k string, v *scheduler.Job) {
+	s.mux.Lock()
+	s.jobs[k] = v
+	s.mux.Unlock()
+}
+
+func (s *safeJobs) get(k string) *scheduler.Job {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	return s.jobs[k]
+}
+
+func (s *safeJobs) has(k string) bool {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	_, found := s.jobs[k]
+	return found
+}
+
+func (s *safeJobs) delete(k string) {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	delete(s.jobs, k)
+}
+
 // Job is define job with ID
-var jobs map[string]*scheduler.Job
+var jobs *safeJobs
 var jobStatus *safeJobStatus
 
 type messages struct {
@@ -56,7 +86,9 @@ type message struct {
 
 // Setup -
 func Setup() {
-	jobs = make(map[string]*scheduler.Job)
+	jobs = &safeJobs{
+		jobs: make(map[string]*scheduler.Job),
+	}
 	jobStatus = &safeJobStatus{
 		jobStatus: make(map[string]bool),
 	}
@@ -67,7 +99,7 @@ func Setup() {
 
 	go func() {
 		for {
-			infra.Info(fmt.Sprintf("Have %d jobs is running ", len(jobs)))
+			infra.Info(fmt.Sprintf("Have %d jobs is running ", len(jobs.jobs)))
 			time.Sleep(time.Second * 10)
 		}
 	}()
@@ -163,7 +195,7 @@ func NotifyForGmail(gmail *rdb.Gmail, apiSlack *slack.Client) error {
 	}
 
 	// add job
-	jobs[gmail.Email] = job
+	jobs.set(gmail.Email, job)
 
 	return nil
 }
@@ -202,11 +234,11 @@ func StopNotifyForUser(user *rdb.User) error {
 
 // StopNotifyForGmail -
 func StopNotifyForGmail(mail string) {
-	if _, found := jobs[mail]; found {
+	if jobs.has(mail) {
 		infra.Debug("Stop notify for ", mail)
-		curJob := jobs[mail]
+		curJob := jobs.get(mail)
 		curJob.Quit <- true
-		delete(jobs, mail)
+		jobs.delete(mail)
 	}
 }
 
