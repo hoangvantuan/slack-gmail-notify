@@ -1,6 +1,5 @@
 FROM golang
 
-ENV SLGMAILS_ENV=dev
 ENV GOBIN=$GOPATH/bin
 ENV app=$GOPATH/src/github.com/mdshun/slack-gmail-notify
 
