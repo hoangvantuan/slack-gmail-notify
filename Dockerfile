@@ -1,14 +1,16 @@
 FROM golang
 
-ARG env=dev
-ARG app=${GOPATH}/src/github.com/mdshun/slack-gmail-notify
-ARG port=8080
+ENV SLGMAILS_ENV=dev
 ENV GOBIN=$GOPATH/bin
+ENV app=$GOPATH/src/github.com/mdshun/slack-gmail-notify
 
-RUN go get github.com/mdshun/slack-gmail-notify
-RUN go get github.com/golang/dep/cmd/dep
+RUN export PATH=$PATH:$GOBIN
+RUN git clone https://github.com/mdshun/slack-gmail-notify ${app}
+RUN go get -u github.com/golang/dep/cmd/dep
+
 WORKDIR ${app}
-RUN go install
-EXPOSE ${port}
-
-#CMD ["go", "run", "main.go"]
+COPY *.env.* /
+RUN dep ensure
+RUN go build -o sgn main.go
+EXPOSE 8080
+CMD [ "sgn" ]
