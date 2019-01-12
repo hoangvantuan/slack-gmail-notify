@@ -28,8 +28,8 @@ type envConfig struct {
 }
 
 const (
-	repoPath = "./"
-	envExt   = ".slgmails.env"
+	repoPath  = "./"
+	envPrefix = ".slgmails"
 )
 
 func setupEnv() {
@@ -54,5 +54,5 @@ func parseEnv() {
 }
 
 func envFileName() string {
-	return fmt.Sprintf("%s.%s", envExt, getEnvironment())
+	return fmt.Sprintf("%s.%s.env", envPrefix, getEnvironment())
 }

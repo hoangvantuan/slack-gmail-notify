@@ -1,4 +1,4 @@
 vendor/
 *.exe
 gin-bin
-*.env.*
+*.env

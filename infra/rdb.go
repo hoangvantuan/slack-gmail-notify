@@ -36,12 +36,8 @@ var dbConfigs = map[environment]dbConfig{
 func setupDatabase() {
 	// Determine base config per env.
 	dbc := dbConfigs[getEnvironment()]
-
-	Info("Get RDS username & password from env...")
 	dbc.Username = Env.MysqlUser
 	dbc.Password = Env.MysqlPass
-
-	Info("Get MYSQL endpoint...")
 
 	dbc.Endpoint = Env.MysqlEndpoint
 
@@ -49,7 +45,6 @@ func setupDatabase() {
 		Fatal("db endpoint not found on environment variable and config")
 	}
 
-	Info("Connect database...")
 	connectToDatabase(
 		fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True&loc=Local",
 			dbc.Username, dbc.Password, dbc.Endpoint, dbc.Database),
