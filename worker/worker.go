@@ -206,6 +206,7 @@ func StopNotifyForGmail(mail string) {
 		infra.Debug("Stop notify for ", mail)
 		curJob := jobs[mail]
 		curJob.Quit <- true
+		delete(jobs, mail)
 	}
 }
 
