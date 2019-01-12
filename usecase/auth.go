@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/mdshun/slack-gmail-notify/infra"
 	"github.com/mdshun/slack-gmail-notify/repository/rdb"
@@ -31,7 +32,7 @@ func NewAuthUsecase() AuthUsecase {
 
 func (a *authUsecaseImpl) AuthSlack(ri *AuthRequestInput) error {
 	// Get authentication response from slack
-	or, err := slack.GetOAuthResponse(infra.Env.SlackClientID, infra.Env.SlackClientSecret, ri.Code, infra.Env.APIHost+"/"+infra.Env.SlackRedirectedPath, infra.IsProduction())
+	or, err := slack.GetOAuthResponse(&http.Client{}, infra.Env.SlackClientID, infra.Env.SlackClientSecret, ri.Code, infra.Env.APIHost+"/"+infra.Env.SlackRedirectedPath)
 	if err != nil {
 		return err
 	}
