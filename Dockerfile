@@ -13,6 +13,6 @@ RUN export PATH=$PATH:$GOBIN && \
     go build -o sgn main.go
 
 COPY *.env ./
-EXPOSE 8080
+EXPOSE 8081
 
 CMD [ "./sgn" ]
