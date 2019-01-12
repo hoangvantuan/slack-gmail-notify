@@ -12,4 +12,4 @@ create-tunnel-server:
 tunnel-client:
 	tunnel -config .tunnel/tunnel.yml start-all
 tunnel-server:
-	tunneld -httpAddr 5000 -httpsAddr 5001 -tlsCrt .tunnel/server.crt -tlsKey .tunneld/server.key > /dev/null 2>&1 &
+	tunneld -httpAddr 5000 -httpsAddr 5001 -tlsCrt .tunnel/server.crt -tlsKey .tunnel/server.key > /dev/null 2>&1 &
