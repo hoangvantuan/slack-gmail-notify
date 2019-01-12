@@ -9,7 +9,6 @@ import (
 	"github.com/mdshun/slack-gmail-notify/handler"
 	"github.com/mdshun/slack-gmail-notify/infra"
 	"github.com/mdshun/slack-gmail-notify/worker"
-	"github.com/mediadotech/distribution-backend/cmd/public-api/validator"
 )
 
 // Run is start app
@@ -17,7 +16,7 @@ func Run() {
 	e := echo.New()
 
 	// add validator
-	e.Validator = validator.NewDefaultValidator()
+	e.Validator = NewDefaultValidator()
 
 	e.Debug = !infra.IsProduction()
 

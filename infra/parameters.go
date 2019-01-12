@@ -29,7 +29,7 @@ type envConfig struct {
 
 const (
 	repoPath = "./"
-	envExt   = ".env"
+	envExt   = ".slgmails.env"
 )
 
 func setupEnv() {

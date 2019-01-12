@@ -45,12 +45,12 @@
   version = "v0.16.0"
 
 [[projects]]
-  digest = "1:adea5a94903eb4384abef30f3d878dc9ff6b6b5b0722da25b82e5169216dfb61"
+  digest = "1:ec6f9bf5e274c833c911923c9193867f3f18788c461f76f05f62bb1510e0ae65"
   name = "github.com/go-sql-driver/mysql"
   packages = ["."]
   pruneopts = "UT"
-  revision = "d523deb1b23d913de5bdada721a6071e71283618"
-  version = "v1.4.0"
+  revision = "72cd26f257d44c1114970e19afddcd812016007e"
+  version = "v1.4.1"
 
 [[projects]]
   digest = "1:97df918963298c287643883209a2c3f642e6593379f97ab400c2a2e219ab647d"
@@ -69,15 +69,15 @@
   version = "v1.4.0"
 
 [[projects]]
-  digest = "1:b6f4477f09f11785097a121811f3a90d8d26cab73c1aa71abda859bdf6ad2334"
+  digest = "1:420ec120a74b22e8a967f2a2928d89503e373848c0d4447d16ddbbbef9a9965c"
   name = "github.com/jinzhu/gorm"
   packages = [
     ".",
     "dialects/mysql",
   ]
   pruneopts = "UT"
-  revision = "6ed508ec6a4ecb3531899a69cbc746ccf65a4166"
-  version = "v1.9.1"
+  revision = "472c70caa40267cb89fd8facb07fe6454b578626"
+  version = "v1.9.2"
 
 [[projects]]
   branch = "master"
@@ -96,18 +96,18 @@
   version = "v1.3.0"
 
 [[projects]]
-  digest = "1:0c2ca8699f9332007af8f9ee882cb2e93c7acfe6e67df4e8529aade9c548bc88"
+  digest = "1:73c5062c19c602b4d279b581b0ee3ffe43f61bfc37e91885b89190154bb5e909"
   name = "github.com/labstack/echo"
   packages = [
     ".",
     "middleware",
   ]
   pruneopts = "UT"
-  revision = "2e9f4ea4e010fa328318107ba074b1b72381c571"
-  version = "v3.3.7"
+  revision = "c7eb8da9ec73e78c4f38413f3f835e0cd52c7d72"
+  version = "v3.3.8"
 
 [[projects]]
-  digest = "1:568171fc14a3d819b112c3e219d351ea7b05e8dad7935c4168c6b3373244a686"
+  digest = "1:764bce605f1c70823a567ac3205a03e6b7f375ca747d8820fded0b0abddda802"
   name = "github.com/labstack/gommon"
   packages = [
     "bytes",
@@ -116,8 +116,16 @@
     "random",
   ]
   pruneopts = "UT"
-  revision = "2a618302b929cc20862dda3aa6f02f64dbe740dd"
-  version = "v0.2.7"
+  revision = "7fd9f68ece0bcb1a905fac8f1549f0083f71c51b"
+  version = "v0.2.8"
+
+[[projects]]
+  digest = "1:6782ffc812e8e700e6952ede1e60487ff1fd9da489eff762985be662a7cfc431"
+  name = "github.com/leodido/go-urn"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "70078a794e8ea4b497ba7c19a78cd60f90ccf0f4"
+  version = "v1.1.0"
 
 [[projects]]
   digest = "1:c658e84ad3916da105a761660dcaeb01e63416c8ec7bc62256a9b411a05fcd67"
@@ -136,14 +144,6 @@
   version = "v0.0.4"
 
 [[projects]]
-  branch = "master"
-  digest = "1:b5b445b937a64dac26bacbadbf54bff5c7b94263090de639912ec32b33adb66f"
-  name = "github.com/mediadotech/distribution-backend"
-  packages = ["cmd/public-api/validator"]
-  pruneopts = "UT"
-  revision = "e5c3b957db1d4f591407c97c496f0d3d52652f6f"
-
-[[projects]]
   digest = "1:0d01bcdbda5760553e5ab803faa3d3a0dc6a3ef357eb179b8ac8501b358d49ce"
   name = "github.com/nlopes/slack"
   packages = [
@@ -156,12 +156,12 @@
   version = "v0.4.0"
 
 [[projects]]
-  digest = "1:40e195917a951a8bf867cd05de2a46aaf1806c50cf92eebf4c16f78cd196f747"
+  digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
   name = "github.com/pkg/errors"
   packages = ["."]
   pruneopts = "UT"
-  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
-  version = "v0.8.0"
+  revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
+  version = "v0.8.1"
 
 [[projects]]
   digest = "1:c468422f334a6b46a19448ad59aaffdfc0a36b08fdcc1c749a0b29b6453d7e59"
@@ -219,7 +219,7 @@
     "acme/autocert",
   ]
   pruneopts = "UT"
-  revision = "e4dc69e5b2fd71dcaf8bd5d054eb936deb78d1fa"
+  revision = "ff983b9c42bc9fbf91556e191cc8efb585c16908"
 
 [[projects]]
   branch = "master"
@@ -230,30 +230,30 @@
     "context/ctxhttp",
   ]
   pruneopts = "UT"
-  revision = "adae6a3d119ae4890b46832a2e88a95adc62b8e7"
+  revision = "915654e7eabcea33ae277abbecf52f0d8b7a9fdc"
 
 [[projects]]
   branch = "master"
-  digest = "1:bd33fb266abe5db1fb1c04e58e98192068f05a8d22fae2a9f22270c8422bb331"
+  digest = "1:62bf0fe61cbb370876c32f605ce8f9dd16ace3fdeab28f7a9d7b46f2ee2a87a4"
   name = "golang.org/x/oauth2"
   packages = [
     ".",
     "internal",
   ]
   pruneopts = "UT"
-  revision = "f42d05182288abf10faef86d16c0d07b8d40ea2d"
+  revision = "36a7019397c4c86cf59eeab3bc0d188bac444277"
 
 [[projects]]
   branch = "master"
-  digest = "1:7ba061af4131fb44b30448572acd0d6fefbf63a61b97b7ef1dea0be5871c2742"
+  digest = "1:91137b48dc3eb34409f731b49f63a5ebf73218168a065e1a93af24eb5b2f99e8"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "UT"
-  revision = "66b7b1311ac80bbafcd2daeef9a5e6e2cd1e2399"
+  revision = "48ac38b7c8cbedd50b1613c0fccacfc7d88dfcdf"
 
 [[projects]]
   branch = "master"
-  digest = "1:46affef8383ed5bf70ed4e55ec903c03219d5cd03ad5742cfa55746ee0d705de"
+  digest = "1:eb98bc2aaea2de0d240ee4535e481a663d7ea675ec8718fdd4cc4e88ce6b1497"
   name = "google.golang.org/api"
   packages = [
     "gensupport",
@@ -262,10 +262,10 @@
     "googleapi/internal/uritemplates",
   ]
   pruneopts = "UT"
-  revision = "83a9d304b1e613fc253e1e2710778642fe81af53"
+  revision = "455dee39f703f70d67ceea7c56a61041712c1447"
 
 [[projects]]
-  digest = "1:a623ed4965cad144a32551cb009b9bad9ad247c22ca1afdd934fc85d0c891f93"
+  digest = "1:9e29a0ec029d012437d88da3ccccf18adcdce069cab08d462056c2c6bb006505"
   name = "google.golang.org/appengine"
   packages = [
     "cloudsql",
@@ -278,16 +278,16 @@
     "urlfetch",
   ]
   pruneopts = "UT"
-  revision = "4a4468ece617fc8205e99368fa2200e9d1fad421"
-  version = "v1.3.0"
+  revision = "e9657d882bb81064595ca3b56cbe2546bbabf7b1"
+  version = "v1.4.0"
 
 [[projects]]
-  digest = "1:2c6a8f26c364b006a27b8090a9583fcc4b7865583fcf93f99a20fce339e87192"
+  digest = "1:85d4b76b833a0d3d1f5950a1ffbae503908f19af397ea329e6517bfc3edeabc3"
   name = "gopkg.in/go-playground/validator.v9"
   packages = ["."]
   pruneopts = "UT"
-  revision = "1fa3c8d6336562f0a3f95c73593ee2b57ff4da11"
-  version = "v9.23.0"
+  revision = "cdd5c28d217804eec51fa694927e6c57465748f6"
+  version = "v9.25.0"
 
 [solve-meta]
   analyzer-name = "dep"
@@ -300,12 +300,9 @@
     "github.com/joho/godotenv",
     "github.com/labstack/echo",
     "github.com/labstack/echo/middleware",
-    "github.com/mediadotech/distribution-backend/cmd/public-api/validator",
     "github.com/nlopes/slack",
     "github.com/nlopes/slack/slackevents",
-    "github.com/pkg/errors",
     "go.uber.org/zap",
-    "golang.org/x/net/context",
     "golang.org/x/oauth2",
     "google.golang.org/api/gmail/v1",
     "google.golang.org/api/googleapi",

@@ -1,17 +1,10 @@
 # connect host
 server_addr: 54.92.46.176:5223
 tunnels:
-    dev:
-        # protocol
-        proto: http
-        # refirect to localhost
-        addr: localhost:8080/
-        # request from slgmails.tk
-        host: dev-slgmails.mdshun.com
-    stg:
-        # protocol
-        proto: http
-        # refirect to localhost
-        addr: localhost:8083/
-        # request from slgmails.tk
-        host: stg-slgmails.mdshun.com
+  dev:
+    # protocol
+    proto: http
+    # refirect to localhost
+    addr: localhost:8080/
+    # request from dev-slgmails.mdshun.com
+    host: dev-slgmails.mdshun.com
