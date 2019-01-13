@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/mdshun/slack-gmail-notify/infra"
 	"github.com/mdshun/slack-gmail-notify/repository/rdb"
@@ -159,9 +160,10 @@ func listAccount(ir *IteractiveRequestParams, text string) (*slack.Msg, error) {
 	}
 
 	slackAPI := slack.New(team.BotAccessToken)
-	cns, _, err := slackAPI.GetConversations(&slack.GetConversationsParameters{
-		Types: []string{"public_channel", "private_channel"},
-		Limit: 200,
+	cns, _, err := slackAPI.GetConversationsForUser(&slack.GetConversationsForUserParameters{
+		Types:  []string{"public_channel", "private_channel", "im"},
+		Limit:  200,
+		UserID: ir.User.ID,
 	})
 	if err != nil {
 		return nil, err
@@ -176,21 +178,41 @@ func listAccount(ir *IteractiveRequestParams, text string) (*slack.Msg, error) {
 		if cn.IsGroup || cn.IsIM {
 			prefix = "🔒 "
 		}
+		if cn.IsIM {
+			aao = append(aao, slack.AttachmentActionOption{
+				Text:  strings.Join(cn.Members, ", "),
+				Value: cn.ID,
+			})
+			continue
+		}
 		aao = append(aao, slack.AttachmentActionOption{
 			Text:  prefix + cn.Name,
-			Value: cn.Name,
+			Value: cn.ID,
 		})
 	}
 
-	selectChannelBtn := func(value string) slack.AttachmentAction {
+	selectChannelBtn := func(cinfo *slack.Channel) slack.AttachmentAction {
+		var prefix string
+		var text string
+		if cinfo.IsChannel {
+			prefix = "# "
+		}
+		if cinfo.IsGroup || cinfo.IsIM {
+			prefix = "🔒 "
+		}
+		if cinfo.IsIM {
+			text = strings.Join(cinfo.Members, ", ")
+		} else {
+			text = cinfo.Name
+		}
 		return slack.AttachmentAction{
 			Name: util.NotifyChannelName,
 			Text: util.NotifyChannelText,
 			Type: util.NotifyChannelType,
 			SelectedOptions: []slack.AttachmentActionOption{
 				{
-					Text:  value,
-					Value: value,
+					Text:  prefix + text,
+					Value: cinfo.ID,
 				},
 			},
 			Options: aao,
@@ -222,12 +244,17 @@ func listAccount(ir *IteractiveRequestParams, text string) (*slack.Msg, error) {
 	ats := []slack.Attachment{}
 
 	for _, email := range mails {
+		cinfo, err := slackAPI.GetConversationInfo(email.NotifyChannelID, false)
+		if err != nil {
+			return nil, err
+		}
+
 		at := slack.Attachment{}
 		at.Text = email.Email
 		// callback_id is email
 		at.CallbackID = email.Email
 		at.Actions = []slack.AttachmentAction{
-			selectChannelBtn(email.NotifyChannelID),
+			selectChannelBtn(cinfo),
 			removeBtn,
 		}
 
