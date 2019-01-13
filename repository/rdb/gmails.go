@@ -1,6 +1,7 @@
 package rdb
 
 import (
+	"errors"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -92,5 +93,28 @@ func (t *gmailRepositoryImpl) FindByUser(user *User) ([]*Gmail, error) {
 
 // Save -
 func (t *gmailRepositoryImpl) Save(gmail *Gmail) error {
-	return t.db.Save(gmail).Error
+	temp := &Gmail{}
+	result := t.db.Where("email = ?", gmail.Email).First(temp)
+	if result.RecordNotFound() {
+		return t.db.Save(gmail).Error
+	}
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if temp.TeamID != gmail.TeamID {
+		return errors.New("email was install in other workspace before")
+	}
+
+	if temp.UserID != gmail.UserID {
+		return errors.New("email was install by other user before")
+	}
+
+	temp.AccessToken = gmail.AccessToken
+	temp.ExpiryDate = gmail.ExpiryDate
+	temp.RefreshToken = gmail.RefreshToken
+	temp.Scope = gmail.Scope
+	temp.TokenType = gmail.TokenType
+
+	return t.db.Save(temp).Error
 }

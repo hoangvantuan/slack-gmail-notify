@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo"
@@ -68,10 +69,10 @@ func (a *authHandler) slackAuth(ctx echo.Context) error {
 	})
 	if err != nil {
 		infra.Warn(err)
-		return ctx.String(http.StatusInternalServerError, "Slack authentication is fail")
+		return ctx.HTML(http.StatusInternalServerError, fmt.Sprintf("Slack authentication is fail, back to <a href=%s>home page<a>", infra.Env.APIHost))
 	}
 
-	return ctx.String(http.StatusOK, "thanks you for install app")
+	return ctx.Redirect(http.StatusSeeOther, infra.Env.APIHost)
 }
 
 func (a *authHandler) googleAuth(ctx echo.Context) error {
@@ -110,8 +111,8 @@ func (a *authHandler) googleAuth(ctx echo.Context) error {
 	}, secretInfo)
 	if err != nil {
 		infra.Warn(err)
-		return ctx.String(http.StatusInternalServerError, "Google account authentication is fail")
+		return ctx.HTML(http.StatusInternalServerError, fmt.Sprintf("Google authentication is fail, back to <a href=%s>home page<a>", infra.Env.APIHost))
 	}
 
-	return ctx.String(http.StatusOK, "thanks you, register gmail account successfull!")
+	return ctx.Redirect(http.StatusSeeOther, infra.Env.APIHost)
 }

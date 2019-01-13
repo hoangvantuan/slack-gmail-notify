@@ -2,7 +2,6 @@ package app
 
 import (
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/labstack/echo"
@@ -15,6 +14,8 @@ import (
 // Run is start app
 func Run() {
 	e := echo.New()
+
+	e.Static("/static", "public")
 
 	// add validator
 	e.Validator = NewDefaultValidator()
@@ -39,7 +40,7 @@ func Run() {
 
 	// Set API root.
 	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Gmail Slack Notify API server works!")
+		return c.File("index.html")
 	})
 
 	infra.Setup()

@@ -72,5 +72,20 @@ func (t *teamRepositoryImpl) FindAllTeam() ([]*Team, error) {
 
 // Save will save or update team
 func (t *teamRepositoryImpl) Save(team *Team) error {
-	return t.db.Save(team).Error
+	temp := &Team{}
+	result := t.db.Where("team_id = ?", team.TeamID).First(temp)
+	if result.RecordNotFound() {
+		return t.db.Save(team).Error
+	}
+	if result.Error != nil {
+		return result.Error
+	}
+
+	temp.AccessToken = team.AccessToken
+	temp.BotAccessToken = team.BotAccessToken
+	temp.BotUserID = team.BotUserID
+	temp.Scope = team.Scope
+	temp.UserID = team.UserID
+
+	return t.db.Save(temp).Error
 }
