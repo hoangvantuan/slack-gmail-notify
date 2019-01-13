@@ -152,18 +152,48 @@ func listAccount(ir *IteractiveRequestParams, text string) (*slack.Msg, error) {
 		text = "You not have any gmail account, please add to start notify"
 	}
 
+	teamRepo := rdb.NewTeamRepository(infra.RDB)
+	team, err := teamRepo.FindByTeamID(ir.Team.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	slackAPI := slack.New(team.BotAccessToken)
+	cns, _, err := slackAPI.GetConversations(&slack.GetConversationsParameters{
+		Types: []string{"public_channel", "private_channel"},
+		Limit: 200,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	aao := []slack.AttachmentActionOption{}
+	for _, cn := range cns {
+		var prefix string
+		if cn.IsChannel {
+			prefix = "# "
+		}
+		if cn.IsGroup || cn.IsIM {
+			prefix = "🔒 "
+		}
+		aao = append(aao, slack.AttachmentActionOption{
+			Text:  prefix + cn.Name,
+			Value: cn.Name,
+		})
+	}
+
 	selectChannelBtn := func(value string) slack.AttachmentAction {
 		return slack.AttachmentAction{
-			Name:       util.NotifyChannelName,
-			Text:       util.NotifyChannelText,
-			Type:       util.NotifyChannelType,
-			DataSource: "channels",
+			Name: util.NotifyChannelName,
+			Text: util.NotifyChannelText,
+			Type: util.NotifyChannelType,
 			SelectedOptions: []slack.AttachmentActionOption{
 				{
 					Text:  value,
 					Value: value,
 				},
 			},
+			Options: aao,
 		}
 	}
 
