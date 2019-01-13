@@ -268,7 +268,7 @@ func notify(gmail *rdb.Gmail, apiSlack *slack.Client) error {
 	}
 
 	if len(ms.ids) > 0 {
-		infra.Info("Email ", gmail.Email, " has (", len(ms.ids), ") new message")
+		infra.Debug("Email ", gmail.Email, " has (", len(ms.ids), ") new message")
 	}
 
 	sw := newSlWorker(apiSlack)
