@@ -43,7 +43,7 @@ func Run() {
 	})
 
 	infra.Setup()
-	fmt.Println("Starting app in ", time.Now().Format("2006/1/2 15:04:05 MST"))
+	infra.Info("Starting app in ", time.Now().Format("2006/1/2 15:04:05 MST"))
 	worker.Setup()
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%s", infra.Env.Port)))
 }
