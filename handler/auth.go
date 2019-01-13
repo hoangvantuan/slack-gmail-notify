@@ -50,11 +50,15 @@ func (a *authHandler) slackAuth(ctx echo.Context) error {
 	rp := &authRequestParams{}
 
 	err := ctx.Bind(rp)
-	if err == nil {
-		err = ctx.Validate(rp)
-	}
 	if err != nil {
-		return ctx.String(http.StatusBadRequest, err.Error())
+		infra.Warn(err)
+		return ctx.String(http.StatusBadRequest, "Parameter is invalid")
+	}
+
+	err = ctx.Validate(rp)
+	if err != nil {
+		infra.Warn(err)
+		return ctx.String(http.StatusBadRequest, "Parameter is invalid")
 	}
 
 	uc := usecase.NewAuthUsecase()
@@ -63,7 +67,8 @@ func (a *authHandler) slackAuth(ctx echo.Context) error {
 		State: rp.State,
 	})
 	if err != nil {
-		return ctx.String(http.StatusInternalServerError, err.Error())
+		infra.Warn(err)
+		return ctx.String(http.StatusInternalServerError, "Slack authentication is fail")
 	}
 
 	return ctx.String(http.StatusOK, "thanks you for install app")
@@ -77,15 +82,25 @@ func (a *authHandler) googleAuth(ctx echo.Context) error {
 	secretInfo := &usecase.UserIdentity{}
 	err := json.Unmarshal([]byte(decodedState), secretInfo)
 	if err != nil {
-		return ctx.String(http.StatusBadRequest, err.Error())
+		infra.Warn(err)
+		return ctx.String(http.StatusBadRequest, "Parameter is invalid")
 	}
 	err = ctx.Bind(rp)
-	if err == nil {
-		err = ctx.Validate(rp)
-		err = ctx.Validate(secretInfo)
-	}
 	if err != nil {
-		return ctx.String(http.StatusBadRequest, err.Error())
+		infra.Warn(err)
+		return ctx.String(http.StatusBadRequest, "Parameter is invalid")
+	}
+
+	err = ctx.Validate(rp)
+	if err != nil {
+		infra.Warn(err)
+		return ctx.String(http.StatusBadRequest, "Parameter is invalid")
+	}
+
+	err = ctx.Validate(secretInfo)
+	if err != nil {
+		infra.Warn(err)
+		return ctx.String(http.StatusBadRequest, "Parameter is invalid")
 	}
 
 	uc := usecase.NewAuthUsecase()
@@ -94,7 +109,8 @@ func (a *authHandler) googleAuth(ctx echo.Context) error {
 		State: rp.State,
 	}, secretInfo)
 	if err != nil {
-		return ctx.String(http.StatusInternalServerError, err.Error())
+		infra.Warn(err)
+		return ctx.String(http.StatusInternalServerError, "Google account authentication is fail")
 	}
 
 	return ctx.String(http.StatusOK, "thanks you, register gmail account successfull!")

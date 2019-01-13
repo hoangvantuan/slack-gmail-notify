@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo"
+	"github.com/mdshun/slack-gmail-notify/infra"
 	"github.com/mdshun/slack-gmail-notify/usecase"
 	"github.com/mdshun/slack-gmail-notify/util"
 	"github.com/nlopes/slack"
@@ -25,6 +26,7 @@ func (e *iteractiveHandler) handler(ctx echo.Context) error {
 	payload := ctx.FormValue("payload")
 
 	if err := json.Unmarshal([]byte(payload), rp); err != nil {
+		infra.Warn(err)
 		return ctx.NoContent(http.StatusOK)
 	}
 
@@ -42,6 +44,7 @@ func (e *iteractiveHandler) handler(ctx echo.Context) error {
 	if rp.Actions[0].Name == util.ListGmailAccountName {
 		err := uc.ListAllAccount(rp)
 		if err != nil {
+			infra.Warn(err)
 			return ctx.NoContent(http.StatusOK)
 		}
 	}
@@ -49,6 +52,7 @@ func (e *iteractiveHandler) handler(ctx echo.Context) error {
 	if rp.Actions[0].Name == util.NotifyChannelName {
 		err := uc.NotifyToChannel(rp)
 		if err != nil {
+			infra.Warn(err)
 			return ctx.NoContent(http.StatusOK)
 		}
 	}
@@ -56,6 +60,7 @@ func (e *iteractiveHandler) handler(ctx echo.Context) error {
 	if rp.Actions[0].Name == util.RemmoveGmailAccountName {
 		err := uc.RemoveAccount(rp)
 		if err != nil {
+			infra.Warn(err)
 			return ctx.NoContent(http.StatusOK)
 		}
 	}

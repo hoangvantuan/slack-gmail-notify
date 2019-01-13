@@ -29,8 +29,8 @@ func Setup() {
 		return
 	}
 
-	setupLogger()
 	setupEnv()
+	setupLogger()
 
 	Info("Running on ", getEnvironment())
 
@@ -50,7 +50,7 @@ func getEnvironment() environment {
 	return env
 }
 
-// IsProduction is true if current env is prod
+// IsProduction is true if current env is prod or stg
 func IsProduction() bool {
-	return getEnvironment() == prod
+	return getEnvironment() == prod || getEnvironment() == stg
 }

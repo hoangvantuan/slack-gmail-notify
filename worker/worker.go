@@ -86,6 +86,7 @@ type message struct {
 
 // Setup -
 func Setup() {
+	infra.Info("Setup worker...")
 	jobs = &safeJobs{
 		jobs: make(map[string]*scheduler.Job),
 	}
@@ -99,8 +100,8 @@ func Setup() {
 
 	go func() {
 		for {
-			infra.Info(fmt.Sprintf("Have %d jobs is running ", len(jobs.jobs)))
-			time.Sleep(time.Second * 10)
+			infra.Debug(fmt.Sprintf("Have %d jobs is running ", len(jobs.jobs)))
+			time.Sleep(time.Second * 60)
 		}
 	}()
 }

@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo"
+	"github.com/mdshun/slack-gmail-notify/infra"
 	"github.com/mdshun/slack-gmail-notify/usecase"
 	"github.com/nlopes/slack/slackevents"
 )
@@ -47,6 +48,7 @@ func (e *eventHandler) handler(ctx echo.Context) error {
 
 	eventAPI, err := slackevents.ParseEvent(json.RawMessage(bodyBytes), optionNoVerifyToken)
 	if err != nil {
+		infra.Warn(err)
 		return ctx.NoContent(http.StatusOK)
 	}
 
@@ -71,6 +73,7 @@ func verificationEventHandler(ctx echo.Context) error {
 	vr := &verificationRequestParam{}
 
 	if err := ctx.Bind(vr); err != nil {
+		infra.Warn(err)
 		return ctx.NoContent(http.StatusOK)
 	}
 
@@ -84,6 +87,7 @@ func appUninstall(ctx echo.Context, teamID string) error {
 
 	err := uc.UninstallApp(teamID)
 	if err != nil {
+		infra.Warn(err)
 		return ctx.NoContent(http.StatusOK)
 	}
 
