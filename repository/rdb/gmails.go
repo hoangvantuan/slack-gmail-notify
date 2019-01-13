@@ -115,6 +115,7 @@ func (t *gmailRepositoryImpl) Save(gmail *Gmail) error {
 	temp.RefreshToken = gmail.RefreshToken
 	temp.Scope = gmail.Scope
 	temp.TokenType = gmail.TokenType
+	temp.NotifyChannelID = gmail.NotifyChannelID
 
 	return t.db.Save(temp).Error
 }
