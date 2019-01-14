@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 
@@ -17,26 +18,30 @@ type iteractiveHandler struct{}
 func BindIteractiveHandler(e *echo.Echo) {
 	h := &iteractiveHandler{}
 
-	e.POST("/v1/slack/interactive", h.handler)
+	e.POST("/v1/slack/interactive", h.withNoContent)
 }
 
-func (e *iteractiveHandler) handler(ctx echo.Context) error {
+func (e *iteractiveHandler) handler(ctx echo.Context) {
 	rp := &usecase.IteractiveRequestParams{}
 
 	payload := ctx.FormValue("payload")
 
 	if err := json.Unmarshal([]byte(payload), rp); err != nil {
 		infra.Warn(err)
-		return ctx.NoContent(http.StatusOK)
+		return
 	}
 
-	// Close button
 	if rp.Actions[0].Name == util.CloseName {
-		return ctx.JSON(http.StatusOK, slack.Msg{
+		res := slack.Msg{
 			ResponseType:    "ephemeral",
 			ReplaceOriginal: true,
 			DeleteOriginal:  true,
-		})
+		}
+		resJSON, _ := json.Marshal(&res)
+		_, err := http.Post(rp.ResponseURL, "application/json", bytes.NewReader(resJSON))
+		if err != nil {
+			infra.Warn(err)
+		}
 	}
 
 	uc := usecase.NewIteractiveUsecase()
@@ -45,7 +50,7 @@ func (e *iteractiveHandler) handler(ctx echo.Context) error {
 		err := uc.ListAllAccount(rp)
 		if err != nil {
 			infra.Warn(err)
-			return ctx.NoContent(http.StatusOK)
+			return
 		}
 	}
 
@@ -53,7 +58,7 @@ func (e *iteractiveHandler) handler(ctx echo.Context) error {
 		err := uc.NotifyToChannel(rp)
 		if err != nil {
 			infra.Warn(err)
-			return ctx.NoContent(http.StatusOK)
+			return
 		}
 	}
 
@@ -61,9 +66,11 @@ func (e *iteractiveHandler) handler(ctx echo.Context) error {
 		err := uc.RemoveAccount(rp)
 		if err != nil {
 			infra.Warn(err)
-			return ctx.NoContent(http.StatusOK)
+			return
 		}
 	}
+}
 
-	return ctx.NoContent(http.StatusOK)
+func (e *iteractiveHandler) withNoContent(ctx echo.Context) error {
+	return withNoContent(ctx, e.handler)
 }

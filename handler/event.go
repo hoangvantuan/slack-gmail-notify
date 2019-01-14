@@ -81,15 +81,15 @@ func verificationEventHandler(ctx echo.Context) error {
 }
 
 func appUninstall(ctx echo.Context, teamID string) error {
-	ctx.String(http.StatusOK, "ok")
 
-	uc := usecase.NewEventUsecase()
+	go func() {
+		uc := usecase.NewEventUsecase()
 
-	err := uc.UninstallApp(teamID)
-	if err != nil {
-		infra.Warn(err)
-		return ctx.NoContent(http.StatusOK)
-	}
+		err := uc.UninstallApp(teamID)
+		if err != nil {
+			infra.Warn(err)
+		}
+	}()
 
 	return ctx.NoContent(http.StatusOK)
 }

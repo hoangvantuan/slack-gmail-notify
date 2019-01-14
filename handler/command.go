@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"net/http"
-
 	"github.com/labstack/echo"
 	"github.com/mdshun/slack-gmail-notify/infra"
 	"github.com/mdshun/slack-gmail-notify/usecase"
@@ -15,15 +13,10 @@ type commandHandler struct{}
 func BindCommandHandler(e *echo.Echo) {
 	h := &commandHandler{}
 
-	e.POST("/v1/slack/command", h.handler)
+	e.POST("/v1/slack/command", h.withNoContent)
 }
 
-func (e *commandHandler) handler(ctx echo.Context) (err error) {
-	// always return 200 status
-	defer func() {
-		err = ctx.NoContent(http.StatusOK)
-	}()
-
+func (e *commandHandler) handler(ctx echo.Context) {
 	rp, err := slack.SlashCommandParse(ctx.Request())
 	if err != nil {
 		infra.Warn(err)
@@ -33,8 +26,9 @@ func (e *commandHandler) handler(ctx echo.Context) (err error) {
 	err = uc.GetMainMenu(&rp)
 	if err != nil {
 		infra.Warn(err)
-		return
 	}
+}
 
-	return
+func (e *commandHandler) withNoContent(ctx echo.Context) error {
+	return withNoContent(ctx, e.handler)
 }

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
-	"strings"
 
 	"github.com/mdshun/slack-gmail-notify/infra"
 	"github.com/mdshun/slack-gmail-notify/repository/rdb"
@@ -161,7 +160,7 @@ func listAccount(ir *IteractiveRequestParams, text string) (*slack.Msg, error) {
 
 	slackAPI := slack.New(team.BotAccessToken)
 	cns, _, err := slackAPI.GetConversationsForUser(&slack.GetConversationsForUserParameters{
-		Types:  []string{"public_channel", "private_channel", "im"},
+		Types:  []string{"public_channel", "private_channel", "im", "mpim"},
 		Limit:  200,
 		UserID: ir.User.ID,
 	})
@@ -171,22 +170,20 @@ func listAccount(ir *IteractiveRequestParams, text string) (*slack.Msg, error) {
 
 	aao := []slack.AttachmentActionOption{}
 	for _, cn := range cns {
-		var prefix string
+		var text string
 		if cn.IsChannel {
-			prefix = "# "
+			text = "# " + cn.NameNormalized
 		}
-		if cn.IsGroup || cn.IsIM {
-			prefix = "🔒 "
+		if cn.IsGroup || cn.IsIM || cn.IsMpIM {
+			if cn.IsIM {
+				text = "🔒 Gmail Notifications"
+			} else {
+				text = "🔒 " + cn.NameNormalized
+			}
 		}
-		if cn.IsIM {
-			aao = append(aao, slack.AttachmentActionOption{
-				Text:  strings.Join(cn.Members, ", "),
-				Value: cn.ID,
-			})
-			continue
-		}
+
 		aao = append(aao, slack.AttachmentActionOption{
-			Text:  prefix + cn.Name,
+			Text:  text,
 			Value: cn.ID,
 		})
 	}
@@ -197,14 +194,15 @@ func listAccount(ir *IteractiveRequestParams, text string) (*slack.Msg, error) {
 		if cinfo.IsChannel {
 			prefix = "# "
 		}
-		if cinfo.IsGroup || cinfo.IsIM {
+		if cinfo.IsGroup || cinfo.IsIM || cinfo.IsMpIM {
 			prefix = "🔒 "
 		}
 		if cinfo.IsIM {
-			text = strings.Join(cinfo.Members, ", ")
+			text = "Gmail Notifications"
 		} else {
-			text = cinfo.Name
+			text = cinfo.NameNormalized
 		}
+
 		return slack.AttachmentAction{
 			Name: util.NotifyChannelName,
 			Text: util.NotifyChannelText,
