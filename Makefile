@@ -2,7 +2,7 @@ GPATH=$(GOPATH)
 
 dev:
 	gin -x vendor -i --appPort 8081 --port 8080 --path $(GPATH)/src/github.com/mdshun/slack-gmail-notify run main.go
-stg:
+stg: caddy
 	kill `cat ./stg.pid` || true
 	go get -u github.com/mdshun/slack-gmail-notify
 	SLGMAIL_ENV=stg slack-gmail-notify > /dev/null 2>&1 & echo $$! > ./stg.pid
