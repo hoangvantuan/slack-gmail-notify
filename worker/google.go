@@ -21,7 +21,7 @@ func newGGWorker(srv *gm.Service) ggWorker {
 }
 
 func (g *ggWorkerImpl) fetchUnread() (*messages, error) {
-	mrs, err := g.srv.Users.Messages.List("me").LabelIds("UNREAD").Q("has:nouserlabels").Do()
+	mrs, err := g.srv.Users.Messages.List("me").LabelIds("UNREAD").Q("NOT label:SLGMAILS").Do()
 	if err != nil {
 		return nil, err
 	}
