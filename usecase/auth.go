@@ -80,6 +80,30 @@ func (a *authUsecaseImpl) AuthGoogle(ri *AuthRequestInput, rp *UserIdentity) err
 		return err
 	}
 
+	var label *gmail.Label
+	labels, err := srv.Users.Labels.List("me").Do()
+	if err != nil {
+		return err
+	}
+
+	found := false
+	for _, l := range labels.Labels {
+		if l.Name == "SLGMAILS" {
+			found = true
+			label = l
+		}
+	}
+	if !found {
+		label, err = srv.Users.Labels.Create("me", &gmail.Label{
+			Name:                  "SLGMAILS",
+			MessageListVisibility: "hide",
+			LabelListVisibility:   "hide",
+		}).Do()
+		if err != nil {
+			return err
+		}
+	}
+
 	infra.Info(fmt.Sprintf("User %s auth %s in %s", rp.UserID, profile.EmailAddress, rp.TeamName))
 
 	gmailRepo := rdb.NewGmailRepository(infra.RDB)
@@ -91,5 +115,7 @@ func (a *authUsecaseImpl) AuthGoogle(ri *AuthRequestInput, rp *UserIdentity) err
 		RefreshToken: token.RefreshToken,
 		ExpiryDate:   token.Expiry,
 		TokenType:    token.TokenType,
+		MarkAs:       "unread",
+		LabelID:      label.Id,
 	})
 }

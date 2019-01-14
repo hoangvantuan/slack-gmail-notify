@@ -18,6 +18,8 @@ type Gmail struct {
 	Scope           string
 	ExpiryDate      time.Time
 	NotifyChannelID string
+	MarkAs          string
+	LabelID         string
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 }
@@ -116,6 +118,8 @@ func (t *gmailRepositoryImpl) Save(gmail *Gmail) error {
 	temp.Scope = gmail.Scope
 	temp.TokenType = gmail.TokenType
 	temp.NotifyChannelID = gmail.NotifyChannelID
+	temp.MarkAs = gmail.MarkAs
+	temp.LabelID = gmail.LabelID
 
 	return t.db.Save(temp).Error
 }

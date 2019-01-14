@@ -9,8 +9,8 @@ import (
 )
 
 type slWorker interface {
-	post(gg ggWorker, m *message, to string) error
-	posts(gg ggWorker, m []*message, to string) error
+	post(gg ggWorker, m *message, to string, isRead bool, labelID string) error
+	posts(gg ggWorker, m []*message, to string, isRead bool, labelID string) error
 }
 
 type slWorkerImpl struct {
@@ -21,7 +21,7 @@ func newSlWorker(c *slack.Client) slWorker {
 	return &slWorkerImpl{c}
 }
 
-func (n *slWorkerImpl) post(gg ggWorker, m *message, to string) error {
+func (n *slWorkerImpl) post(gg ggWorker, m *message, to string, isRead bool, labelID string) error {
 	_, err := n.client.UploadFile(slack.FileUploadParameters{
 		Filetype: "post",
 		Channels: []string{to},
@@ -33,20 +33,27 @@ func (n *slWorkerImpl) post(gg ggWorker, m *message, to string) error {
 		return err
 	}
 
-	err = gg.read(m)
+	err = gg.markLabel(m, labelID)
 	if err != nil {
 		return err
+	}
+
+	if isRead {
+		err = gg.read(m)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
-func (n *slWorkerImpl) posts(gg ggWorker, ms []*message, to string) error {
+func (n *slWorkerImpl) posts(gg ggWorker, ms []*message, to string, isRead bool, labelID string) error {
 	count := 1
 	for _, m := range ms {
 		infra.Debug(fmt.Sprintf("%d message was sent to %s", count, to))
 		count = count + 1
-		err := n.post(gg, m, to)
+		err := n.post(gg, m, to, isRead, labelID)
 		if err != nil {
 			return err
 		}

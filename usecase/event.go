@@ -18,7 +18,8 @@ func NewEventUsecase() EventUsecase {
 }
 
 // UninstallApp will remove all data of team
-func (e *eventUsecaseImpl) UninstallApp(teamID string) (err error) {
+func (e *eventUsecaseImpl) UninstallApp(teamID string) error {
 	rdbexRepository := rdb.NewRdbexRepository(infra.RDB)
 	return rdbexRepository.DeleteTeam(teamID)
+
 }

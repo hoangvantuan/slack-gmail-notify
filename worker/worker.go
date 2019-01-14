@@ -273,7 +273,12 @@ func notify(gmail *rdb.Gmail, apiSlack *slack.Client) error {
 	}
 
 	sw := newSlWorker(apiSlack)
-	err = sw.posts(gw, ms.m, gmail.NotifyChannelID)
+	isRead := true
+	if gmail.MarkAs == "" || gmail.MarkAs == "unread" {
+		isRead = false
+	}
+
+	err = sw.posts(gw, ms.m, gmail.NotifyChannelID, isRead, gmail.LabelID)
 	if err != nil {
 		return err
 	}

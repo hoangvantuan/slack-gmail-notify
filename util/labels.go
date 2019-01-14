@@ -55,4 +55,11 @@ const (
 	RemmoveGmailAccountStyle = dangerStyle
 	// AddGmailAccountType is type
 	RemmoveGmailAccountType = buttonType
+
+	// MarkAsName is mark as name
+	MarkAsName = "MARK-AS"
+	// MarkAsText is mark as text
+	MarkAsText = "Mark as"
+	// MarkAsType is mark as type
+	MarkAsType = selectType
 )

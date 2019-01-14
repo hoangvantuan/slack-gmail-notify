@@ -9,6 +9,7 @@ import (
 type ggWorker interface {
 	fetchUnread() (*messages, error)
 	read(m *message) error
+	markLabel(m *message, labelID string) error
 }
 
 type ggWorkerImpl struct {
@@ -20,7 +21,7 @@ func newGGWorker(srv *gm.Service) ggWorker {
 }
 
 func (g *ggWorkerImpl) fetchUnread() (*messages, error) {
-	mrs, err := g.srv.Users.Messages.List("me").LabelIds("UNREAD").Do()
+	mrs, err := g.srv.Users.Messages.List("me").LabelIds("UNREAD").Q("has:nouserlabels").Do()
 	if err != nil {
 		return nil, err
 	}
@@ -38,6 +39,17 @@ func (g *ggWorkerImpl) read(m *message) error {
 
 	return nil
 }
+func (g *ggWorkerImpl) markLabel(m *message, labelID string) error {
+	_, err := g.srv.Users.Messages.Modify("me", m.ID, &gm.ModifyMessageRequest{
+		AddLabelIds: []string{labelID},
+	}).Do()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (g *ggWorkerImpl) parseMessage(mr *gm.ListMessagesResponse) *messages {
 
 	ms := &messages{}

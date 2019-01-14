@@ -62,6 +62,14 @@ func (e *iteractiveHandler) handler(ctx echo.Context) {
 		}
 	}
 
+	if rp.Actions[0].Name == util.MarkAsName {
+		err := uc.MarkAs(rp)
+		if err != nil {
+			infra.Warn(err)
+			return
+		}
+	}
+
 	if rp.Actions[0].Name == util.RemmoveGmailAccountName {
 		err := uc.RemoveAccount(rp)
 		if err != nil {

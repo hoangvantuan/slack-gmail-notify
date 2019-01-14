@@ -50,6 +50,7 @@ type IteractiveUsecase interface {
 	ListAllAccount(ir *IteractiveRequestParams) error
 	NotifyToChannel(ir *IteractiveRequestParams) error
 	RemoveAccount(ir *IteractiveRequestParams) error
+	MarkAs(ir *IteractiveRequestParams) error
 }
 
 // NewIteractiveUsecase will return event usecase
@@ -86,6 +87,36 @@ func (i *iteractiveUsecaseImpl) NotifyToChannel(ir *IteractiveRequestParams) err
 
 	gmail.NotifyChannelID = ir.Actions[0].SelectedOptions[0].Value
 
+	err = gmailRepo.Save(gmail)
+	if err != nil {
+		return err
+	}
+
+	teamRepo := rdb.NewTeamRepository(infra.RDB)
+	team, err := teamRepo.FindByTeamID(ir.Team.ID)
+	if err != nil {
+		return err
+	}
+
+	slackAPI := slack.New(team.BotAccessToken)
+
+	err = worker.NotifyForGmail(gmail, slackAPI)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (i *iteractiveUsecaseImpl) MarkAs(ir *IteractiveRequestParams) error {
+	gmailRepo := rdb.NewGmailRepository(infra.RDB)
+	// CallbackID is email
+	gmail, err := gmailRepo.FindByEmail(ir.CallbackID)
+	if err != nil {
+		return err
+	}
+
+	gmail.MarkAs = ir.Actions[0].SelectedOptions[0].Value
 	err = gmailRepo.Save(gmail)
 	if err != nil {
 		return err
@@ -191,15 +222,9 @@ func listAccount(ir *IteractiveRequestParams, text string) (*slack.Msg, error) {
 	selectChannelBtn := func(cinfo *slack.Channel) slack.AttachmentAction {
 		if cinfo == nil {
 			return slack.AttachmentAction{
-				Name: util.NotifyChannelName,
-				Text: util.NotifyChannelText,
-				Type: util.NotifyChannelType,
-				SelectedOptions: []slack.AttachmentActionOption{
-					{
-						Text:  "Choose channel",
-						Value: "",
-					},
-				},
+				Name:    util.NotifyChannelName,
+				Text:    util.NotifyChannelText,
+				Type:    util.NotifyChannelType,
 				Options: aao,
 			}
 		}
@@ -229,6 +254,39 @@ func listAccount(ir *IteractiveRequestParams, text string) (*slack.Msg, error) {
 				},
 			},
 			Options: aao,
+		}
+	}
+
+	configOptions := func(markAs string) slack.AttachmentAction {
+		mark := map[string]string{
+			"read":   "Mark as read",
+			"unread": "Mark as unread",
+		}
+
+		if markAs == "" {
+			markAs = "unread"
+		}
+
+		return slack.AttachmentAction{
+			Name: util.MarkAsName,
+			Text: util.MarkAsText,
+			Type: util.MarkAsType,
+			SelectedOptions: []slack.AttachmentActionOption{
+				{
+					Text:  mark[markAs],
+					Value: markAs,
+				},
+			},
+			Options: []slack.AttachmentActionOption{
+				slack.AttachmentActionOption{
+					Text:  "Mark as unread",
+					Value: "unread",
+				},
+				slack.AttachmentActionOption{
+					Text:  "Mark as read",
+					Value: "read",
+				},
+			},
 		}
 	}
 
@@ -266,6 +324,7 @@ func listAccount(ir *IteractiveRequestParams, text string) (*slack.Msg, error) {
 		at.CallbackID = email.Email
 		at.Actions = []slack.AttachmentAction{
 			selectChannelBtn(cinfo),
+			configOptions(email.MarkAs),
 			removeBtn,
 		}
 
