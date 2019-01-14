@@ -189,6 +189,21 @@ func listAccount(ir *IteractiveRequestParams, text string) (*slack.Msg, error) {
 	}
 
 	selectChannelBtn := func(cinfo *slack.Channel) slack.AttachmentAction {
+		if cinfo == nil {
+			return slack.AttachmentAction{
+				Name: util.NotifyChannelName,
+				Text: util.NotifyChannelText,
+				Type: util.NotifyChannelType,
+				SelectedOptions: []slack.AttachmentActionOption{
+					{
+						Text:  "Choose channel",
+						Value: "",
+					},
+				},
+				Options: aao,
+			}
+		}
+
 		var prefix string
 		var text string
 		if cinfo.IsChannel {
@@ -243,10 +258,7 @@ func listAccount(ir *IteractiveRequestParams, text string) (*slack.Msg, error) {
 	ats := []slack.Attachment{}
 
 	for _, email := range mails {
-		cinfo, err := slackAPI.GetConversationInfo(email.NotifyChannelID, false)
-		if err != nil {
-			return nil, err
-		}
+		cinfo, _ := slackAPI.GetConversationInfo(email.NotifyChannelID, false)
 
 		at := slack.Attachment{}
 		at.Text = email.Email
