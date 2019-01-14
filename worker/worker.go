@@ -175,6 +175,7 @@ func NotifyForUser(user *rdb.User) error {
 func NotifyForGmail(gmail *rdb.Gmail, apiSlack *slack.Client) error {
 	// check email is working in job
 	StopNotifyForGmail(gmail.Email)
+	infra.Debug("Start notify for ", gmail.Email)
 
 	job, err := scheduler.Every(fetchTimes).Seconds().Run(func() {
 		// not run if job is running
@@ -260,6 +261,8 @@ func notify(gmail *rdb.Gmail, apiSlack *slack.Client) error {
 	if err != nil {
 		return err
 	}
+
+	infra.Info("Fetching new message for ", gmail.Email)
 
 	gw := newGGWorker(srv)
 	ms, err := gw.fetchUnread()
