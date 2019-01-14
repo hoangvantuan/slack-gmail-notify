@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	fetchTimes = 2
+	fetchTimes = 5
 	running    = true
 	stop       = false
 )
@@ -261,6 +261,8 @@ func notify(gmail *rdb.Gmail, apiSlack *slack.Client) error {
 	if err != nil {
 		return err
 	}
+
+	infra.Info("Fetching new message for ", gmail.Email)
 
 	gw := newGGWorker(srv)
 	ms, err := gw.fetchUnread()
