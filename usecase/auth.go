@@ -97,7 +97,7 @@ func (a *authUsecaseImpl) AuthGoogle(ri *AuthRequestInput, rp *UserIdentity) err
 		label, err = srv.Users.Labels.Create("me", &gmail.Label{
 			Name:                  "SLGMAILS",
 			MessageListVisibility: "hide",
-			LabelListVisibility:   "hide",
+			LabelListVisibility:   "labelHide",
 		}).Do()
 		if err != nil {
 			return err
