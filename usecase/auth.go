@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/mdshun/slack-gmail-notify/infra"
@@ -12,8 +13,9 @@ import (
 )
 
 type UserIdentity struct {
-	UserID string `json:"userId" validate:"required"`
-	TeamID string `json:"teamId" validate:"required"`
+	UserID   string `json:"userId" validate:"required"`
+	TeamID   string `json:"teamId" validate:"required"`
+	TeamName string `json:"teamName"`
 }
 
 // AuthRequestInput is auth request param
@@ -41,6 +43,8 @@ func (a *authUsecaseImpl) AuthSlack(ri *AuthRequestInput) error {
 	if err != nil {
 		return err
 	}
+
+	infra.Info(fmt.Sprintf("You app was install in %s by %s", or.TeamName, or.UserID))
 
 	// start transaction
 	teamRepo := rdb.NewTeamRepository(infra.RDB)
@@ -75,6 +79,8 @@ func (a *authUsecaseImpl) AuthGoogle(ri *AuthRequestInput, rp *UserIdentity) err
 	if err != nil {
 		return err
 	}
+
+	infra.Info(fmt.Sprintf("User %s auth %s in %s", rp.UserID, profile.EmailAddress, rp.TeamName))
 
 	gmailRepo := rdb.NewGmailRepository(infra.RDB)
 	return gmailRepo.Save(&rdb.Gmail{

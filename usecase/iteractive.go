@@ -218,8 +218,9 @@ func listAccount(ir *IteractiveRequestParams, text string) (*slack.Msg, error) {
 	}
 
 	mainActions, err := generateMenuAttachAction(&UserIdentity{
-		TeamID: ir.Team.ID,
-		UserID: ir.User.ID,
+		TeamID:   ir.Team.ID,
+		UserID:   ir.User.ID,
+		TeamName: ir.Team.Name,
 	})
 	if err != nil {
 		return nil, err

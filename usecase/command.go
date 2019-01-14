@@ -46,8 +46,9 @@ func genInteractiveMenu(rp *slack.SlashCommand, text string) (*slack.Msg, error)
 
 	at.CallbackID = "main-menu"
 	actions, err := generateMenuAttachAction(&UserIdentity{
-		UserID: rp.UserID,
-		TeamID: rp.TeamID,
+		UserID:   rp.UserID,
+		TeamID:   rp.TeamID,
+		TeamName: rp.TeamDomain,
 	})
 	if err != nil {
 		return nil, err
