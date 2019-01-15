@@ -4,6 +4,7 @@ const (
 	// style
 	primaryStyle = "primary"
 	dangerStyle  = "danger"
+	defaultStyle = "default"
 
 	// type
 	buttonType = "button"
@@ -62,4 +63,33 @@ const (
 	MarkAsText = "Mark as"
 	// MarkAsType is mark as type
 	MarkAsType = selectType
+
+	// StopEmailName is remove gmail account name
+	StopEmailName = "STOP-EMAIL"
+	//StopEmailText is add gmail account text
+	StopEmailText = "Stop"
+	// StopEmailValue is add gmail account value
+	StopEmailValue = "STOP-EMAIL"
+	// StopEmailStyle is style
+	StopEmailStyle = dangerStyle
+	// StopEmailType is type
+	StopEmailType = buttonType
+
+	// StartEmailName is remove gmail account name
+	StartEmailName = "START-EMAIL"
+	// StartEmailText is add gmail account text
+	StartEmailText = "Start"
+	// StartEmailValue is add gmail account value
+	StartEmailValue = "START-EMAIL"
+	// StartEmailStyle is style
+	StartEmailStyle = primaryStyle
+	// StartEmailType is type
+	StartEmailType = buttonType
+
+	// PendingEmailName is remove gmail account name
+	PendingEmailName = "PENDING-EMAIL"
+	// PendingEmailText is add gmail account text
+	PendingEmailText = "Pending"
+	// PendingEmailValue is add gmail account value
+	PendingEmailValue = "PENDING-EMAIL"
 )

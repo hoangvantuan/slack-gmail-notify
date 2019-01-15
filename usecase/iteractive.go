@@ -51,6 +51,8 @@ type IteractiveUsecase interface {
 	NotifyToChannel(ir *IteractiveRequestParams) error
 	RemoveAccount(ir *IteractiveRequestParams) error
 	MarkAs(ir *IteractiveRequestParams) error
+	Start(ir *IteractiveRequestParams) error
+	Stop(ir *IteractiveRequestParams) error
 }
 
 // NewIteractiveUsecase will return event usecase
@@ -87,6 +89,10 @@ func (i *iteractiveUsecaseImpl) NotifyToChannel(ir *IteractiveRequestParams) err
 
 	gmail.NotifyChannelID = ir.Actions[0].SelectedOptions[0].Value
 
+	if gmail.Status == rdb.Pending {
+		gmail.Status = rdb.Working
+	}
+
 	err = gmailRepo.Save(gmail)
 	if err != nil {
 		return err
@@ -105,7 +111,7 @@ func (i *iteractiveUsecaseImpl) NotifyToChannel(ir *IteractiveRequestParams) err
 		return err
 	}
 
-	return nil
+	return i.ListAllAccount(ir)
 }
 
 func (i *iteractiveUsecaseImpl) MarkAs(ir *IteractiveRequestParams) error {
@@ -165,6 +171,58 @@ func (i *iteractiveUsecaseImpl) RemoveAccount(ir *IteractiveRequestParams) error
 	}
 
 	return nil
+}
+
+func (i *iteractiveUsecaseImpl) Start(ir *IteractiveRequestParams) error {
+	gmailRepo := rdb.NewGmailRepository(infra.RDB)
+	// CallbackID is email
+	gmail, err := gmailRepo.FindByEmail(ir.CallbackID)
+	if err != nil {
+		return err
+	}
+
+	gmail.Status = rdb.Working
+
+	err = gmailRepo.Save(gmail)
+	if err != nil {
+		return err
+	}
+
+	teamRepo := rdb.NewTeamRepository(infra.RDB)
+	team, err := teamRepo.FindByTeamID(ir.Team.ID)
+	if err != nil {
+		return err
+	}
+
+	slackAPI := slack.New(team.BotAccessToken)
+
+	err = worker.NotifyForGmail(gmail, slackAPI)
+	if err != nil {
+		return err
+	}
+
+	return i.ListAllAccount(ir)
+}
+
+func (i *iteractiveUsecaseImpl) Stop(ir *IteractiveRequestParams) error {
+	gmailRepo := rdb.NewGmailRepository(infra.RDB)
+	// CallbackID is email
+	gmail, err := gmailRepo.FindByEmail(ir.CallbackID)
+	if err != nil {
+		return err
+	}
+
+	gmail.Status = rdb.Stop
+
+	err = gmailRepo.Save(gmail)
+	if err != nil {
+		return err
+	}
+
+	// Stop notify gmail
+	worker.StopNotifyForGmail(ir.CallbackID)
+
+	return i.ListAllAccount(ir)
 }
 
 func listAccount(ir *IteractiveRequestParams, text string) (*slack.Msg, error) {
@@ -308,6 +366,28 @@ func listAccount(ir *IteractiveRequestParams, text string) (*slack.Msg, error) {
 			Type:  util.RemmoveGmailAccountType,
 		}
 
+	stopBtn :=
+		slack.AttachmentAction{
+			Name:  util.StopEmailName,
+			Text:  util.StopEmailText,
+			Style: util.StopEmailStyle,
+			Type:  util.StopEmailType,
+		}
+
+	startBtn :=
+		slack.AttachmentAction{
+			Name:  util.StartEmailName,
+			Text:  util.StartEmailText,
+			Style: util.StartEmailStyle,
+			Type:  util.StartEmailType,
+		}
+
+	pendingBtn :=
+		slack.AttachmentAction{
+			Name: util.PendingEmailName,
+			Text: util.PendingEmailText,
+		}
+
 	menu := slack.Attachment{
 		CallbackID: "main-menu",
 		Actions:    mainActions,
@@ -318,13 +398,26 @@ func listAccount(ir *IteractiveRequestParams, text string) (*slack.Msg, error) {
 	for _, email := range mails {
 		cinfo, _ := slackAPI.GetConversationInfo(email.NotifyChannelID, false)
 
+		var workBtn slack.AttachmentAction
+		if email.Status == rdb.Stop {
+			workBtn = startBtn
+		} else if email.Status == rdb.Working {
+			workBtn = stopBtn
+		} else {
+			workBtn = pendingBtn
+		}
+
 		at := slack.Attachment{}
 		at.Text = email.Email
+		if email.Status == rdb.Pending {
+			at.Text = at.Text + " is pending,select channel to start notify"
+		}
 		// callback_id is email
 		at.CallbackID = email.Email
 		at.Actions = []slack.AttachmentAction{
 			selectChannelBtn(cinfo),
 			configOptions(email.MarkAs),
+			workBtn,
 			removeBtn,
 		}
 

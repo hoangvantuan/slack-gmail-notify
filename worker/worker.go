@@ -174,6 +174,15 @@ func NotifyForUser(user *rdb.User) error {
 
 // NotifyForGmail -
 func NotifyForGmail(gmail *rdb.Gmail, apiSlack *slack.Client) error {
+	if gmail.Status == rdb.Stop {
+		infra.Debug(gmail.Email, " is stop")
+		return nil
+	}
+
+	if gmail.Status == rdb.Pending {
+		infra.Debug(gmail.Email, " is pending")
+		return nil
+	}
 	// check email is working in job
 	StopNotifyForGmail(gmail.Email)
 	infra.Debug("Start notify for ", gmail.Email)

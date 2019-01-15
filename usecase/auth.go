@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/mdshun/slack-gmail-notify/worker"
+
 	"github.com/mdshun/slack-gmail-notify/infra"
 	"github.com/mdshun/slack-gmail-notify/repository/rdb"
 	"github.com/nlopes/slack"
@@ -106,6 +108,8 @@ func (a *authUsecaseImpl) AuthGoogle(ri *AuthRequestInput, rp *UserIdentity) err
 
 	infra.Info(fmt.Sprintf("User %s auth %s in %s", rp.UserID, profile.EmailAddress, rp.TeamName))
 
+	worker.StopNotifyForGmail(profile.EmailAddress)
+
 	gmailRepo := rdb.NewGmailRepository(infra.RDB)
 	return gmailRepo.Save(&rdb.Gmail{
 		Email:        profile.EmailAddress,
@@ -117,5 +121,6 @@ func (a *authUsecaseImpl) AuthGoogle(ri *AuthRequestInput, rp *UserIdentity) err
 		TokenType:    token.TokenType,
 		MarkAs:       "read",
 		LabelID:      label.Id,
+		Status:       rdb.Pending,
 	})
 }

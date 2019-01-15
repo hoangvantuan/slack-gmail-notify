@@ -9,8 +9,11 @@ import (
 
 // Gmail is gmails table
 const (
-	Read   = "read"
-	Unread = "unread"
+	Read    = "read"
+	Unread  = "unread"
+	Stop    = "stop"
+	Working = "working"
+	Pending = "pending"
 )
 
 type Gmail struct {
@@ -24,7 +27,7 @@ type Gmail struct {
 	ExpiryDate      time.Time
 	NotifyChannelID string
 	MarkAs          string
-	IsStop          bool
+	Status          string
 	LabelID         string
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
@@ -126,7 +129,7 @@ func (t *gmailRepositoryImpl) Save(gmail *Gmail) error {
 	temp.NotifyChannelID = gmail.NotifyChannelID
 	temp.MarkAs = gmail.MarkAs
 	temp.LabelID = gmail.LabelID
-	temp.IsStop = gmail.IsStop
+	temp.Status = gmail.Status
 
 	return t.db.Save(temp).Error
 }
