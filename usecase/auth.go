@@ -115,7 +115,7 @@ func (a *authUsecaseImpl) AuthGoogle(ri *AuthRequestInput, rp *UserIdentity) err
 		RefreshToken: token.RefreshToken,
 		ExpiryDate:   token.Expiry,
 		TokenType:    token.TokenType,
-		MarkAs:       "unread",
+		MarkAs:       "read",
 		LabelID:      label.Id,
 	})
 }

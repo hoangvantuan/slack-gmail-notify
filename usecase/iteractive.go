@@ -259,12 +259,12 @@ func listAccount(ir *IteractiveRequestParams, text string) (*slack.Msg, error) {
 
 	configOptions := func(markAs string) slack.AttachmentAction {
 		mark := map[string]string{
-			"read":   "Mark as read",
-			"unread": "Mark as unread",
+			rdb.Read:   "Mark as read",
+			rdb.Unread: "Mark as unread",
 		}
 
 		if markAs == "" {
-			markAs = "unread"
+			markAs = rdb.Read
 		}
 
 		return slack.AttachmentAction{
@@ -280,11 +280,11 @@ func listAccount(ir *IteractiveRequestParams, text string) (*slack.Msg, error) {
 			Options: []slack.AttachmentActionOption{
 				slack.AttachmentActionOption{
 					Text:  "Mark as unread",
-					Value: "unread",
+					Value: rdb.Unread,
 				},
 				slack.AttachmentActionOption{
 					Text:  "Mark as read",
-					Value: "read",
+					Value: rdb.Read,
 				},
 			},
 		}
