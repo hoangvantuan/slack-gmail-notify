@@ -25,7 +25,7 @@ func (n *slWorkerImpl) post(gg ggWorker, m *message, to string, isRead bool, lab
 	_, err := n.client.UploadFile(slack.FileUploadParameters{
 		Filetype: "post",
 		Channels: []string{to},
-		Content:  fmt.Sprintf("### FROM: %s\n\n%s", m.From, m.Body),
+		Content:  fmt.Sprintf("### To: %s\n### From: %s\n\n%s", m.To, m.From, m.Body),
 		Filename: m.Subject,
 		Title:    m.Subject,
 	})

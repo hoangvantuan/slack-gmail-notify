@@ -13,11 +13,12 @@ type ggWorker interface {
 }
 
 type ggWorkerImpl struct {
-	srv *gm.Service
+	srv   *gm.Service
+	email string
 }
 
-func newGGWorker(srv *gm.Service) ggWorker {
-	return &ggWorkerImpl{srv}
+func newGGWorker(srv *gm.Service, email string) ggWorker {
+	return &ggWorkerImpl{srv, email}
 }
 
 func (g *ggWorkerImpl) fetchUnread() (*messages, error) {
@@ -57,6 +58,7 @@ func (g *ggWorkerImpl) parseMessage(mr *gm.ListMessagesResponse) *messages {
 		msg := &message{}
 		ms.ids = append(ms.ids, m.Id)
 		msg.ID = m.Id
+		msg.To = g.email
 
 		msd, err := g.srv.Users.Messages.Get("me", m.Id).Do()
 		if err != nil {

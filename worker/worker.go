@@ -79,6 +79,7 @@ type messages struct {
 type message struct {
 	ID      string
 	From    string
+	To      string
 	CC      string
 	Subject string
 	Body    string
@@ -263,7 +264,7 @@ func notify(gmail *rdb.Gmail, apiSlack *slack.Client) error {
 		return err
 	}
 
-	gw := newGGWorker(srv)
+	gw := newGGWorker(srv, gmail.Email)
 	ms, err := gw.fetchUnread()
 	if err != nil {
 		return err
