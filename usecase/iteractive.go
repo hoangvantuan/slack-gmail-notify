@@ -149,7 +149,7 @@ func (i *iteractiveUsecaseImpl) RemoveAccount(ir *IteractiveRequestParams) error
 	// Stop notify gmail
 	worker.StopNotifyForGmail(ir.CallbackID)
 
-	msg, err := listAccount(ir, "List gmail account you already register")
+	msg, err := listAccount(ir, "Remove account success")
 	if err != nil {
 		return err
 	}

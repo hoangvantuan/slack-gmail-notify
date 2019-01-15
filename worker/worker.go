@@ -241,6 +241,7 @@ func StopNotifyForGmail(mail string) {
 		curJob := jobs.get(mail)
 		curJob.Quit <- true
 		jobs.delete(mail)
+		jobStatus.set(mail, stop)
 	}
 }
 
