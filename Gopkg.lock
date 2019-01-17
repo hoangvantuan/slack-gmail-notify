@@ -145,7 +145,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:9b7aeec80f238300789c747490ad2a4887cd3748f8b5edbca81ef4ec5fd1d9fe"
+  digest = "1:9b12ba0cfe6a7563501202448815657032d226780a190ff2e7a125156e36dfd8"
   name = "github.com/nlopes/slack"
   packages = [
     ".",
@@ -153,7 +153,7 @@
     "slackutilsx",
   ]
   pruneopts = "UT"
-  revision = "5911c620bb31338e391032c7b4032394beda330a"
+  revision = "5553239389683e149648a8b243aec928759c892a"
 
 [[projects]]
   digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
@@ -234,22 +234,22 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:62bf0fe61cbb370876c32f605ce8f9dd16ace3fdeab28f7a9d7b46f2ee2a87a4"
+  digest = "1:e007b54f54cbd4214aa6d97a67d57bc2539991adb4e22ea92c482bbece8de469"
   name = "golang.org/x/oauth2"
   packages = [
     ".",
     "internal",
   ]
   pruneopts = "UT"
-  revision = "36a7019397c4c86cf59eeab3bc0d188bac444277"
+  revision = "5dab4167f31cbd76b407f1486c86b40748bc5073"
 
 [[projects]]
   branch = "master"
-  digest = "1:91137b48dc3eb34409f731b49f63a5ebf73218168a065e1a93af24eb5b2f99e8"
+  digest = "1:f6f6d9d6f80c9e32acc0f4f3b904e0b9f5b18a7757c2ef941121bd79a10e7bdf"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "UT"
-  revision = "48ac38b7c8cbedd50b1613c0fccacfc7d88dfcdf"
+  revision = "11f53e03133963fb11ae0588e08b5e0b85be8be5"
 
 [[projects]]
   branch = "master"
@@ -262,7 +262,7 @@
     "googleapi/internal/uritemplates",
   ]
   pruneopts = "UT"
-  revision = "455dee39f703f70d67ceea7c56a61041712c1447"
+  revision = "43037ff31f6958582e5d3c19d9ac1a4d2819669c"
 
 [[projects]]
   digest = "1:9e29a0ec029d012437d88da3ccccf18adcdce069cab08d462056c2c6bb006505"
@@ -303,6 +303,7 @@
     "github.com/nlopes/slack",
     "github.com/nlopes/slack/slackevents",
     "go.uber.org/zap",
+    "go.uber.org/zap/zapcore",
     "golang.org/x/oauth2",
     "google.golang.org/api/gmail/v1",
     "google.golang.org/api/googleapi",

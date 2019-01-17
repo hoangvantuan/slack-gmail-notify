@@ -30,7 +30,7 @@ type authUsecaseImpl struct{}
 
 // AuthUsecase is auth interface
 type AuthUsecase interface {
-	AuthSlack(ri *AuthRequestInput) error
+	AuthSlack(ri *AuthRequestInput) (*rdb.Team, error)
 	AuthGoogle(ri *AuthRequestInput, rp *UserIdentity) error
 }
 
@@ -39,18 +39,18 @@ func NewAuthUsecase() AuthUsecase {
 	return &authUsecaseImpl{}
 }
 
-func (a *authUsecaseImpl) AuthSlack(ri *AuthRequestInput) error {
+func (a *authUsecaseImpl) AuthSlack(ri *AuthRequestInput) (*rdb.Team, error) {
 	// Get authentication response from slack
 	or, err := slack.GetOAuthResponse(&http.Client{}, infra.Env.SlackClientID, infra.Env.SlackClientSecret, ri.Code, infra.Env.APIHost+"/"+infra.Env.SlackRedirectedPath)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	infra.Info(fmt.Sprintf("You app was install in %s by %s", or.TeamName, or.UserID))
 
 	// start transaction
 	teamRepo := rdb.NewTeamRepository(infra.RDB)
-	return teamRepo.Save(&rdb.Team{
+	team := &rdb.Team{
 		TeamID:         or.TeamID,
 		AccessToken:    or.AccessToken,
 		Scope:          or.Scope,
@@ -58,7 +58,9 @@ func (a *authUsecaseImpl) AuthSlack(ri *AuthRequestInput) error {
 		UserID:         or.UserID,
 		BotAccessToken: or.Bot.BotAccessToken,
 		BotUserID:      or.Bot.BotUserID,
-	})
+	}
+
+	return team, teamRepo.Save(team)
 }
 
 func (a *authUsecaseImpl) AuthGoogle(ri *AuthRequestInput, rp *UserIdentity) error {
@@ -97,7 +99,7 @@ func (a *authUsecaseImpl) AuthGoogle(ri *AuthRequestInput, rp *UserIdentity) err
 	}
 	if !found {
 		label, err = srv.Users.Labels.Create("me", &gmail.Label{
-			Name:                  "SLGMAILS",
+			Name: "SLGMAILS",
 			MessageListVisibility: "hide",
 			LabelListVisibility:   "labelHide",
 		}).Do()
