@@ -3,6 +3,7 @@ package worker
 import (
 	"encoding/base64"
 
+	"github.com/pkg/errors"
 	gm "google.golang.org/api/gmail/v1"
 )
 
@@ -24,7 +25,7 @@ func newGGWorker(srv *gm.Service, email string) ggWorker {
 func (g *ggWorkerImpl) fetchUnread() (*messages, error) {
 	mrs, err := g.srv.Users.Messages.List("me").LabelIds("UNREAD").Q("NOT label:SLGMAILS").Do()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to fetch new message")
 	}
 
 	return g.parseMessage(mrs)
