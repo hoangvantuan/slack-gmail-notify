@@ -273,6 +273,7 @@ func notify(gmail *rdb.Gmail, apiSlack *slack.Client) error {
 		return err
 	}
 
+	infra.Info(fmt.Sprintf("Fetching new message for email (%s)", gmail.Email))
 	gw := newGGWorker(srv, gmail.Email)
 	ms, err := gw.fetchUnread()
 	if err != nil {
@@ -280,7 +281,7 @@ func notify(gmail *rdb.Gmail, apiSlack *slack.Client) error {
 	}
 
 	if len(ms.ids) > 0 {
-		infra.Debug("Email ", gmail.Email, " has (", len(ms.ids), ") new message")
+		infra.Info("Email ", gmail.Email, " has (", len(ms.ids), ") new message")
 	}
 
 	sw := newSlWorker(apiSlack)

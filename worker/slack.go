@@ -51,7 +51,7 @@ func (n *slWorkerImpl) post(gg ggWorker, m *message, to string, isRead bool, lab
 func (n *slWorkerImpl) posts(gg ggWorker, ms []*message, to string, isRead bool, labelID string) error {
 	count := 1
 	for _, m := range ms {
-		infra.Debug(fmt.Sprintf("%d message was sent to %s", count, to))
+		infra.Info(fmt.Sprintf("%d message was sent to %s", count, to))
 		count = count + 1
 		err := n.post(gg, m, to, isRead, labelID)
 		if err != nil {
