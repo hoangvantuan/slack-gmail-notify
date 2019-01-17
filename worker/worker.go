@@ -273,7 +273,6 @@ func notify(gmail *rdb.Gmail, apiSlack *slack.Client) error {
 		return err
 	}
 
-	infra.Info(fmt.Sprintf("Fetching new message for email (%s)", gmail.Email))
 	gw := newGGWorker(srv, gmail.Email)
 	ms, err := gw.fetchUnread()
 	if err != nil {
