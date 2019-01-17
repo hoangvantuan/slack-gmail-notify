@@ -4,21 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="32x32"
-      href="/static/favicon.png"
-    />
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon.png" />
     <title>Slack gmail notification application</title>
-    <link
-      href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons"
-      rel="stylesheet"
-    />
-    <link
-      href="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.min.css"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.min.css" rel="stylesheet" />
   </head>
   <body>
     <div id="app">
@@ -28,9 +17,8 @@
             <v-layout>
               <v-flex>
                 <h3 class="text-xs-center">
-                  Hello, i'm shun. This this slack application use for notify
-                  your gmail to slack channel <br />
-                  Install <a v-bind:href="authSlack">Here</a> <br />
+                  Hello, i'm shun. This this slack application use for notify your gmail to slack channel <br />
+                  Install <a @click="auth">Here</a> <br />
                   <br />
                   Repository : https://github.com/mdshun/slack-gmail-notify
                 </h3>

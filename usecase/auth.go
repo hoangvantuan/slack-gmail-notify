@@ -30,7 +30,7 @@ type authUsecaseImpl struct{}
 
 // AuthUsecase is auth interface
 type AuthUsecase interface {
-	AuthSlack(ri *AuthRequestInput) (*rdb.Team, error)
+	AuthSlack(ri *AuthRequestInput) error
 	AuthGoogle(ri *AuthRequestInput, rp *UserIdentity) error
 }
 
@@ -39,11 +39,11 @@ func NewAuthUsecase() AuthUsecase {
 	return &authUsecaseImpl{}
 }
 
-func (a *authUsecaseImpl) AuthSlack(ri *AuthRequestInput) (*rdb.Team, error) {
+func (a *authUsecaseImpl) AuthSlack(ri *AuthRequestInput) error {
 	// Get authentication response from slack
 	or, err := slack.GetOAuthResponse(&http.Client{}, infra.Env.SlackClientID, infra.Env.SlackClientSecret, ri.Code, infra.Env.APIHost+"/"+infra.Env.SlackRedirectedPath)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	infra.Info(fmt.Sprintf("You app was install in %s by %s", or.TeamName, or.UserID))
@@ -60,7 +60,7 @@ func (a *authUsecaseImpl) AuthSlack(ri *AuthRequestInput) (*rdb.Team, error) {
 		BotUserID:      or.Bot.BotUserID,
 	}
 
-	return team, teamRepo.Save(team)
+	return teamRepo.Save(team)
 }
 
 func (a *authUsecaseImpl) AuthGoogle(ri *AuthRequestInput, rp *UserIdentity) error {

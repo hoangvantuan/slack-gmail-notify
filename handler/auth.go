@@ -63,7 +63,7 @@ func (a *authHandler) slackAuth(ctx echo.Context) error {
 	}
 
 	uc := usecase.NewAuthUsecase()
-	team, err := uc.AuthSlack(&usecase.AuthRequestInput{
+	err = uc.AuthSlack(&usecase.AuthRequestInput{
 		Code:  rp.Code,
 		State: rp.State,
 	})
@@ -72,7 +72,7 @@ func (a *authHandler) slackAuth(ctx echo.Context) error {
 		return ctx.HTML(http.StatusInternalServerError, fmt.Sprintf("Slack authentication is fail, back to <a href=%s>home page<a>", infra.Env.APIHost))
 	}
 
-	return ctx.Redirect(http.StatusSeeOther, fmt.Sprintf("slack://open?team=%s", team.TeamID))
+	return ctx.String(http.StatusOK, "Install success thank you. Now open you slack to use app")
 }
 
 func (a *authHandler) googleAuth(ctx echo.Context) error {
@@ -114,5 +114,5 @@ func (a *authHandler) googleAuth(ctx echo.Context) error {
 		return ctx.HTML(http.StatusInternalServerError, fmt.Sprintf("Google authentication is fail, back to <a href=%s>home page<a>", infra.Env.APIHost))
 	}
 
-	return ctx.Redirect(http.StatusSeeOther, fmt.Sprintf("slack://open?team=%s", secretInfo.TeamID))
+	return ctx.String(http.StatusOK, "Add email success thank you. Now open you slack to use app")
 }
