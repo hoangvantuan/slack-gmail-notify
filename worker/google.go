@@ -27,7 +27,7 @@ func (g *ggWorkerImpl) fetchUnread() (*messages, error) {
 		return nil, err
 	}
 
-	return g.parseMessage(mrs), nil
+	return g.parseMessage(mrs)
 }
 
 func (g *ggWorkerImpl) read(m *message) error {
@@ -51,7 +51,7 @@ func (g *ggWorkerImpl) markLabel(m *message, labelID string) error {
 	return nil
 }
 
-func (g *ggWorkerImpl) parseMessage(mr *gm.ListMessagesResponse) *messages {
+func (g *ggWorkerImpl) parseMessage(mr *gm.ListMessagesResponse) (*messages, error) {
 
 	ms := &messages{}
 	for _, m := range mr.Messages {
@@ -62,7 +62,7 @@ func (g *ggWorkerImpl) parseMessage(mr *gm.ListMessagesResponse) *messages {
 
 		msd, err := g.srv.Users.Messages.Get("me", m.Id).Do()
 		if err != nil {
-			return &messages{}
+			return nil, err
 		}
 
 		// parse header
@@ -96,7 +96,7 @@ func (g *ggWorkerImpl) parseMessage(mr *gm.ListMessagesResponse) *messages {
 
 			c, err := base64.URLEncoding.DecodeString(body)
 			if err != nil {
-				return &messages{}
+				return nil, err
 			}
 
 			msg.Body = string(c)
@@ -107,5 +107,5 @@ func (g *ggWorkerImpl) parseMessage(mr *gm.ListMessagesResponse) *messages {
 		ms.m = append(ms.m, msg)
 	}
 
-	return ms
+	return ms, nil
 }
