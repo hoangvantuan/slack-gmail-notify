@@ -101,8 +101,8 @@ func Setup() {
 
 	go func() {
 		for {
-			infra.Debug(fmt.Sprintf("Have %d jobs is running ", len(jobs.jobs)))
-			time.Sleep(time.Second * 60)
+			infra.Info(fmt.Sprintf("Have %d jobs is running ", len(jobs.jobs)))
+			time.Sleep(time.Minute * 10)
 		}
 	}()
 }
