@@ -9,3 +9,4 @@ https://slgmails.mdshun.com {
         }
 
         header / Access-Control-Allow-Origin *
+}
