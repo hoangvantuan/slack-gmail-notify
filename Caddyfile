@@ -1,0 +1,11 @@
+https://slgmails.mdshun.com {
+        log git.access.log
+
+        proxy / http://127.0.0.1:8081 {
+                fail_timeout 300s
+                transparent
+                header_upstream X-Forwarded-Ssl on
+                header_downstream -X-Frame-Options
+        }
+
+        header / Access-Control-Allow-Origin *
